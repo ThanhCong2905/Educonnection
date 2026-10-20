@@ -31,6 +31,10 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.AddScoped<IPasswordValidator<ApplicationUser>, PasswordPolicy>();
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromMinutes(30));
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<WorkspaceService>();
+builder.Services.AddScoped<ProfileDataService>();
+builder.Services.AddScoped<CommunicationService>();
+builder.Services.AddHostedService<ConnectionExpiryWorker>();
 builder.Services.AddScoped<AccountEmailSender>();
 builder.Services.AddScoped<SessionCookieEvents>();
 builder.Services.AddAuthentication(AccountService.Scheme).AddCookie(AccountService.Scheme, options =>

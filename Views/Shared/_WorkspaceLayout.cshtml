@@ -1,0 +1,60 @@
+@using KetNoiGiaSu.ViewModels
+@using KetNoiGiaSu.Models
+@{
+    var workspace = ViewData["Workspace"] as WorkspaceViewModel ?? Model as WorkspaceViewModel ?? new WorkspaceViewModel();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var role = workspace.IsTutor ? "Gia sư" : workspace.IsParent ? "Phụ huynh" : "Học sinh";
+    var initial = User.Identity?.Name?.Split(' ', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()?[..1] ?? "E";
+    var routes = new[] { ("Index", "", "house-door", "Trang chủ"), ("Search", "", "search", workspace.IsTutor ? "Tìm kiếm học sinh" : "Tìm kiếm gia sư"),
+        ("Needs", "", "journal-text", workspace.IsTutor ? "Nhu cầu dạy" : "Nhu cầu học"), ("Connections", "", "link-45deg", "Kết nối"),
+        ("Classes", "", "collection", "Lớp học"), ("Messages", "", "chat-dots", "Tin nhắn"), ("Section", "notifications", "bell", "Thông báo") };
+}
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="referrer" content="same-origin" />
+    <title>@ViewData["Title"] · EduConnect</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/workspace.css" asp-append-version="true" />
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="~/js/workspace.js" asp-append-version="true" defer></script>
+</head><body data-screen="@action" data-account-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value">
+<a class="skip-link" href="#main">Đến nội dung chính</a>
+<aside class="app-sidebar">
+    <a class="app-brand" asp-controller="Workspace" asp-action="Index"><img src="~/images/auth/logo.png" width="166" height="27" alt="EduConnect" /></a>
+    <div class="sidebar-caption">KHÔNG GIAN CỦA BẠN</div>
+    <button class="mobile-nav-toggle btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#workspace-nav" aria-controls="workspace-nav" aria-expanded="false">Menu</button>
+    <nav class="collapse show workspace-nav" id="workspace-nav" aria-label="Điều hướng chính">
+    @foreach (var route in routes)
+    {
+        var selected = route.Item1 == action && (route.Item1 != "Section" || Context.Request.Query["name"] == route.Item2);
+        <a class="side-link @(selected ? "selected" : "")" asp-controller="Workspace" asp-action="@route.Item1" asp-route-name="@(string.IsNullOrEmpty(route.Item2) ? null : route.Item2)" aria-current="@(selected ? "page" : null)"><img src="~/images/ui/@(route.Item3).svg" width="20" height="20" alt="" />@route.Item4</a>
+    }
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="sidebar-help"><span>Cùng bạn trên hành trình học tập</span><p>Một kết nối phù hợp, một khởi đầu tốt hơn.</p></div>
+        <div class="dropdown account-menu">
+            <button class="account-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="avatar">@initial</span><span class="account-name"><strong>@User.Identity?.Name</strong><small>@role</small></span><img src="~/images/ui/chevron-expand.svg" width="16" height="16" alt="Mở menu tài khoản" /></button>
+            <ul class="dropdown-menu shadow-sm">
+                <li><a class="dropdown-item" asp-controller="Workspace" asp-action="Profile">Hồ sơ cá nhân</a></li>
+                <li><a class="dropdown-item" asp-controller="Workspace" asp-action="Status">Trạng thái xử lý</a></li>
+                <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li><form asp-controller="Account" asp-action="Logout" method="post"><button class="dropdown-item text-danger" type="submit">Đăng xuất</button></form></li>
+            </ul>
+        </div>
+    </div>
+</aside>
+<div class="app-shell">
+    <header class="workspace-topbar"><span>Học tập cùng <strong>EduConnect</strong></span><div><span class="role-badge">@role</span><a asp-controller="Workspace" asp-action="Section" asp-route-name="notifications" aria-label="Thông báo"><img src="~/images/ui/bell.svg" width="20" height="20" alt="" /></a></div></header>
+    <main id="main" class="workspace-main">
+        @if (workspace.ApprovalBypassed) { <div class="alert alert-warning" role="status">Chế độ kiểm thử: tạm bỏ điều kiện duyệt gia sư. Trạng thái xét duyệt hồ sơ không thay đổi.</div> }
+        @if (TempData["Success"] is string message) { <div class="alert alert-success" role="status">@message</div> }
+        @if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+        @RenderBody()
+    </main>
+    <footer class="workspace-footer"><span>© @DateTime.Now.Year EduConnect · Kết nối tri thức, nâng tầm tương lai.</span><a asp-controller="Home" asp-action="Information" asp-route-section="privacy">Bảo mật</a></footer>
+</div>
+@await RenderSectionAsync("Scripts", required: false)
+<div class="compare-tray d-none" id="compare-tray" role="region" aria-label="Đối tượng được chọn so sánh"><span id="compare-count">Đã chọn 0/3</span><div class="d-flex gap-2"><button class="btn btn-light btn-sm" type="button" id="clear-comparison">Bỏ chọn</button><button class="btn btn-pink btn-sm" type="button" id="open-comparison" data-bs-toggle="modal" data-bs-target="#comparison-modal">So sánh chi tiết</button></div></div>
+<div class="modal fade" id="comparison-modal" tabindex="-1" aria-labelledby="comparison-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="comparison-title">So sánh nhu cầu</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Đóng"></button></div><div class="modal-body table-responsive" id="comparison-content"></div></div></div></div>
+</body></html>

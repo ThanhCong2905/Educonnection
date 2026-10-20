@@ -14,6 +14,8 @@ public class HomeController : Controller
     }
     public IActionResult Index()
     {
+        if (User.IsInRole("HocSinh") || User.IsInRole("PhuHuynh") || User.IsInRole("GiaSu"))
+            return RedirectToAction("Index", "Workspace");
         return View();
     }
 

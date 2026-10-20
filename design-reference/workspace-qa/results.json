@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "student home and navigation",
+    "parent form includes represented learner",
+    "unapproved tutor sees gate",
+    "tutor creates pending profile",
+    "approved tutor creates and lists teaching needs",
+    "parent publishes learning need",
+    "home distinguishes existing needs from calculated compatibility",
+    "grade filter returns matching need only",
+    "fee filter uses selected unit",
+    "comparison supports up to three needs",
+    "profile tabs and source fields",
+    "tutor sees public learning need without learner identity",
+    "student cannot access tutor profile editor",
+    "all roles and four page groups fit mobile/tablet",
+    "no browser JavaScript errors"
+  ],
+  "passed": 15,
+  "errors": []
+}

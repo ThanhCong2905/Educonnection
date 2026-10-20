@@ -1,0 +1,4 @@
+@model KetNoiGiaSu.ViewModels.WorkspaceViewModel
+@{ ViewData["Title"] = "Hồ sơ gia sư"; }
+@await Component.InvokeAsync("ProfileExtras")
+<div class="page-heading"><div><p class="overline">GIỚI THIỆU CHÍNH BẠN</p><h1>Hồ sơ gia sư</h1><p>Hồ sơ rõ ràng giúp người học hiểu về chuyên môn và cách bạn giảng dạy.</p></div></div><div class="empty-state surface"><span class="empty-icon"><img src="~/images/ui/person-badge.svg" width="40" height="40" alt="" /></span><h2>Bạn chưa có hồ sơ gia sư</h2><p>Hoàn thiện thông tin để gửi quản trị viên xét duyệt.</p><a class="btn btn-pink" asp-action="EditProfile">Tạo hồ sơ của tôi</a></div>

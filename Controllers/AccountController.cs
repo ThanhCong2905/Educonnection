@@ -60,7 +60,9 @@ public sealed class AccountController(AccountService accounts, UserManager<Appli
         // Remembering the cookie never bypasses server-side 30-minute inactivity expiry.
         await HttpContext.SignInAsync(AccountService.Scheme, result.Principal,
             new AuthenticationProperties { IsPersistent = model.RememberMe, AllowRefresh = true });
-        return Url.IsLocalUrl(model.ReturnUrl) ? LocalRedirect(model.ReturnUrl!) : RedirectToAction(nameof(Overview));
+        if (Url.IsLocalUrl(model.ReturnUrl)) return LocalRedirect(model.ReturnUrl!);
+        return result.Principal.IsInRole("HocSinh") || result.Principal.IsInRole("PhuHuynh") || result.Principal.IsInRole("GiaSu")
+            ? RedirectToAction("Index", "Workspace") : RedirectToAction(nameof(Overview));
     }
 
     [HttpPost, Authorize]

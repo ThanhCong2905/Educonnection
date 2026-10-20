@@ -11,10 +11,50 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 {
     public DbSet<UserSession> Sessions => Set<UserSession>();
     public DbSet<LoginAttempt> LoginAttempts => Set<LoginAttempt>();
+    public DbSet<Subject> Subjects => Set<Subject>();
+    public DbSet<TutorProfile> TutorProfiles => Set<TutorProfile>();
+    public DbSet<TeachingSubject> TeachingSubjects => Set<TeachingSubject>();
+    public DbSet<LearningNeed> Needs => Set<LearningNeed>();
+    public DbSet<AvailabilitySlot> Availability => Set<AvailabilitySlot>();
+    public DbSet<PersonalProfile> PersonalProfiles => Set<PersonalProfile>();
+    public DbSet<ProfileAttachment> ProfileAttachments => Set<ProfileAttachment>();
+    public DbSet<ConnectionRequest> ConnectionRequests => Set<ConnectionRequest>();
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<ConnectedClass> ConnectedClasses => Set<ConnectedClass>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<ConnectionRequest>(e => { e.ToTable("YeuCauKetNoiLopHoc"); e.Property(x => x.RowVersion).IsRowVersion(); e.Property(x => x.HocPhi).HasPrecision(18,0); });
+        builder.Entity<Conversation>().ToTable("CuocHoiThoai");
+        builder.Entity<ChatMessage>().ToTable("TinNhan");
+        builder.Entity<ConnectedClass>(e => { e.ToTable("LopHoc"); e.Property(x => x.RowVersion).IsRowVersion(); e.Property(x => x.HocPhi).HasPrecision(18,0); });
+        builder.Entity<PersonalProfile>(e => {
+            e.ToTable("HoSoCaNhan"); e.HasKey(x => x.TaiKhoanId); e.Ignore(x => x.PublicRegion);
+            e.Property(x => x.ThanhPho).HasMaxLength(100); e.Property(x => x.QuanHuyen).HasMaxLength(100);
+            e.Property(x => x.DiaChiChiTiet).HasMaxLength(500);
+        });
+        builder.Entity<ProfileAttachment>(e => { e.ToTable("TepDinhKem"); });
+        builder.Entity<Subject>().ToTable("MonHoc");
+        builder.Entity<TutorProfile>(e =>
+        {
+            e.ToTable("HoSoGiaSu");
+            e.Property(x => x.HocPhiCongKhai).HasPrecision(18, 0);
+            e.Property(x => x.RowVersion).IsRowVersion();
+        });
+        builder.Entity<TeachingSubject>(e =>
+        {
+            e.ToTable("HoSoGiaSuMonDay");
+            e.HasKey(x => new { x.HoSoGiaSuId, x.MonHocId });
+        });
+        builder.Entity<LearningNeed>(e =>
+        {
+            e.ToTable("NhuCauHoc");
+            e.Property(x => x.HocPhiDuKien).HasPrecision(18, 0);
+            e.Property(x => x.RowVersion).IsRowVersion();
+        });
+        builder.Entity<AvailabilitySlot>().ToTable("KhungGioRanh");
         builder.Entity<ApplicationUser>(entity =>
         {
             entity.Property(x => x.HoTen).HasMaxLength(150).IsRequired();

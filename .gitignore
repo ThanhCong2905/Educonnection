@@ -5,6 +5,9 @@ obj/
 .localappdata/
 .data-protection-keys/
 .maildrop/
+.private-uploads/
 tmp/
 artifacts/
+node_modules/
+TestResults/
 appsettings.*.local.json

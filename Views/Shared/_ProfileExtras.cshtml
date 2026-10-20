@@ -1,0 +1,19 @@
+@model KetNoiGiaSu.ViewModels.PersonalProfileEditor
+<section id="personal-details" class="surface profile-section my-4">
+<h2>Địa chỉ cá nhân</h2><p class="text-muted">Điền sẵn khi tạo nhu cầu mới. Chỉ khu vực chung được công khai.</p>
+@if (!Model.Workspace.IsProfileComplete) { <div class="alert alert-warning">Hồ sơ chưa đầy đủ. Địa chỉ là bắt buộc; gia sư cần ít nhất một tệp bằng cấp hoặc chứng chỉ trước khi tạo nhu cầu, kể cả khi đang tạm bỏ duyệt để kiểm thử.</div> }
+@if (TempData["ProfileError"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+<form asp-controller="ProfileData" asp-action="Address" method="post" data-workspace-form>
+<div class="row g-3"><div class="col-md-6"><label asp-for="Form.City" class="form-label">Tỉnh / Thành phố *</label><input asp-for="Form.City" class="form-control" required maxlength="100" autocomplete="address-level1" /></div>
+<div class="col-md-6"><label asp-for="Form.District" class="form-label">Quận / Huyện / Khu vực</label><input asp-for="Form.District" class="form-control" maxlength="100" /></div>
+<div class="col-12"><label asp-for="Form.DetailedAddress" class="form-label">Địa chỉ chi tiết (riêng tư) *</label><textarea asp-for="Form.DetailedAddress" class="form-control" required rows="3" maxlength="500" autocomplete="street-address"></textarea><p class="form-text">Số nhà, đường, phường/xã. Không hiển thị trên hồ sơ công khai, bài đăng, tìm kiếm hoặc so sánh.</p></div></div><button class="btn btn-pink mt-3" type="submit">Lưu địa chỉ</button></form>
+</section>
+@if (Model.Workspace.IsTutor) {
+<section id="qualifications-files" class="surface profile-section my-4"><h2>Bằng cấp, chứng chỉ & minh chứng kinh nghiệm</h2><p class="text-muted">Tài liệu riêng tư phục vụ xét duyệt hồ sơ, không công khai với người tìm kiếm.</p>
+@if (Model.Workspace.MyProfile == null) { <p>Lưu hồ sơ chuyên môn trước khi thêm tệp minh chứng.</p><a class="btn btn-outline-pink" asp-controller="Workspace" asp-action="EditProfile">Tạo hồ sơ chuyên môn</a> }
+else { <form asp-controller="ProfileData" asp-action="Upload" method="post" enctype="multipart/form-data" data-workspace-form><label for="proof-file" class="form-label">Đính kèm tài liệu</label><input class="form-control" id="proof-file" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required /><p class="form-text">PDF, JPG, PNG; tối đa 10 MB/tệp, 10 tệp/hồ sơ. Tệp chưa được quét mã độc tự động.</p><button class="btn btn-pink" type="submit">Tải minh chứng lên</button></form> }
+<h3 class="mt-4">Tệp đã đính kèm (@Model.Files.Count/10)</h3>
+@if(Model.Files.Count==0) { <p class="text-muted">Chưa có minh chứng.</p> }
+@foreach(var file in Model.Files) { <div class="border-bottom py-3"><p class="text-break mb-2"><strong>@file.TenGoc</strong> <small class="text-muted">· @((file.KichThuoc / 1024d).ToString("N1")) KB · Chưa xác minh</small></p><div class="d-flex gap-2 flex-wrap"><a class="btn btn-outline-pink btn-sm" asp-controller="ProfileData" asp-action="Download" asp-route-id="@file.Id">Tải xuống để xem</a><form asp-controller="ProfileData" asp-action="Delete" method="post"><input type="hidden" name="id" value="@file.Id" /><button class="btn btn-outline-danger btn-sm" type="submit">Xóa tệp</button></form></div></div> }
+</section>
+}

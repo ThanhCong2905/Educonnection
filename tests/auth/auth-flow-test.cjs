@@ -42,7 +42,7 @@ async function run(){
  r=await form('/Account/Register',base);assert.equal(r.status,302);assert.equal(r.headers.location,'/Account/Login');pass('registration creates account and role');
  r=await form('/Account/Register',base);assert.equal(r.status,200);assert.ok(r.body.includes('validation-summary-errors'));pass('duplicate registration rejected');
  r=await form('/Account/Login',{Identifier:email,Password:'wrong secret password'});assert.equal(r.status,200);assert.ok(r.body.includes('validation-summary-errors'));pass('incorrect credentials show error');
- r=await form('/Account/Login',{Identifier:base.Phone,Password:password,ReturnUrl:'https://evil.invalid'});assert.equal(r.status,302);assert.equal(r.headers.location,'/Account/Overview');pass('phone login works and external return URL ignored');
+ r=await form('/Account/Login',{Identifier:base.Phone,Password:password,ReturnUrl:'https://evil.invalid'});assert.equal(r.status,302);assert.equal(r.headers.location,'/Workspace');pass('phone login works and external return URL ignored');
  r=await request('/Account/Overview');assert.equal(r.status,200);assert.ok(r.body.includes(email));pass('authenticated overview shows account');
  r=await form('/Account/ChangePassword',{CurrentPassword:password,Password:updated,ConfirmPassword:updated},'127.0.0.78');assert.equal(r.status,302);pass('change password revokes session');
  assert.equal((await request('/Account/Overview')).status,302);
