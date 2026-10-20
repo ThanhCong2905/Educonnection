@@ -1,0 +1,18 @@
+﻿@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Kết nối gia sư và học sinh";
+    ViewData["MainClass"] = "landing-main";
+}
+
+<section class="hero">
+    <img class="hero-badge" src="~/images/auth/badge.png" alt="Nền tảng kết nối giáo dục xác thực" width="292" height="30" />
+    <h1>Kết nối gia sư và học sinh phù hợp</h1>
+    <p>Nền tảng kết nối trực tiếp giúp phụ huynh và học sinh nhanh chóng tìm được gia sư chất lượng và uy tín.</p>
+    @if (User.Identity?.IsAuthenticated == true) { <a class="primary-button" asp-controller="Account" asp-action="Overview">Tài khoản của tôi</a> }
+    else { <a class="primary-button" asp-controller="Account" asp-action="Register">Đăng ký ngay</a> }
+</section>
+<section class="feature-grid" aria-label="Lợi ích của EduConnect">
+    <article class="feature-card"><span class="feature-icon"><img src="~/images/auth/search.png" alt="" width="24" height="24" /></span><h2>Tìm gia sư phù hợp</h2><p>Dễ dàng lọc theo môn học, khu vực, lịch học và mức học phí phù hợp với nhu cầu.</p></article>
+    <article class="feature-card"><span class="feature-icon"><img src="~/images/auth/progress.png" alt="" width="24" height="24" /></span><h2>Theo dõi tiến độ học tập</h2><p>Cập nhật kết quả buổi học, đánh giá định kỳ và lộ trình tiến bộ một cách minh bạch.</p></article>
+    <article class="feature-card"><span class="feature-icon"><img src="~/images/auth/calendar.png" alt="" width="24" height="24" /></span><h2>Quản lý lớp học dễ dàng</h2><p>Lên lịch học linh hoạt, thông báo nhắc nhở và quản lý thông tin liên lạc tập trung.</p></article>
+</section>

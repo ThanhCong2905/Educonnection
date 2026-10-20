@@ -1,0 +1,10 @@
+bin/
+obj/
+.dotnet/
+.appdata/
+.localappdata/
+.data-protection-keys/
+.maildrop/
+tmp/
+artifacts/
+appsettings.*.local.json

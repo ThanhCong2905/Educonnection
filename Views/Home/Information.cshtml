@@ -1,0 +1,26 @@
+@{
+    Layout = "_AuthLayout";
+    ViewData["MainClass"] = "auth-main";
+    var section = ViewData["Section"]?.ToString();
+    ViewData["Title"] = section switch { "terms" => "Điều khoản sử dụng", "privacy" => "Chính sách bảo mật", "contact" => "Liên hệ", _ => "Về EduConnect" };
+}
+<article class="auth-card information-card"><h1>@ViewData["Title"]</h1>
+@switch (section)
+{
+    case "terms":
+        <p>EduConnect hỗ trợ học sinh, phụ huynh và gia sư tìm kiếm, trao đổi và phối hợp học tập.</p>
+        <h2>Sử dụng tài khoản</h2><p>Cung cấp thông tin chính xác, bảo vệ mật khẩu và sử dụng tài khoản đúng vai trò. Không đăng nội dung giả mạo, xúc phạm hoặc xâm phạm quyền riêng tư của người khác.</p>
+        <h2>Thỏa thuận học tập</h2><p>Các bên tự trao đổi, thống nhất điều kiện học và chịu trách nhiệm về quyết định của mình. Nền tảng không thay thế quyết định của người học, phụ huynh hoặc gia sư.</p>
+        break;
+    case "privacy":
+        <p>Thông tin đăng ký gồm họ tên, email, số điện thoại và vai trò được sử dụng để quản lý tài khoản và hỗ trợ kết nối học tập. Mật khẩu được lưu dưới dạng băm, không lưu bản rõ.</p>
+        <p>Thông tin lớp học chỉ được cung cấp theo quyền truy cập. Bạn cần giữ bí mật thông tin đăng nhập và đăng xuất khi sử dụng thiết bị dùng chung.</p>
+        break;
+    case "contact":
+        <p>Để được hỗ trợ về tài khoản hoặc báo lỗi, vui lòng liên hệ nhóm quản trị EduConnect qua kênh hỗ trợ đã được cung cấp khi bạn tham gia hệ thống.</p>
+        break;
+    default:
+        <p>EduConnect là hệ thống hỗ trợ kết nối gia sư và học sinh, đồng hành từ tìm kiếm và thống nhất việc học đến theo dõi tiến độ và phản hồi.</p>
+        break;
+}
+<p class="switch-form"><a asp-controller="Home" asp-action="Index">Về trang chủ</a></p></article>

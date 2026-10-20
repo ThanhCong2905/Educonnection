@@ -1,0 +1,24 @@
+@model KetNoiGiaSu.ViewModels.LoginViewModel
+@{ ViewData["Title"] = "Đăng nhập"; var hasAuthError = ViewData.ModelState.TryGetValue("", out var authenticationState) && authenticationState.Errors.Count > 0; }
+<section class="auth-card login-card @(hasAuthError ? "login-invalid" : "")" aria-labelledby="page-title">
+    <h1 id="page-title">Đăng nhập</h1>
+    @if (hasAuthError) { <div asp-validation-summary="ModelOnly" class="subtitle login-error" role="alert"></div> }
+    else { <p class="subtitle">Chào mừng bạn quay trở lại với EduConnect</p> }
+    @if (TempData["Success"] is string success) { <div class="notice success" role="status">@success</div> }
+    <form asp-action="Login" method="post" data-auth-form>
+        <input asp-for="ReturnUrl" type="hidden" />
+        <div class="field">
+            <label asp-for="Identifier">Email hoặc Số điện thoại <span class="required">*</span></label>
+            <div class="input-wrap has-icon"><img src="~/images/auth/email.png" alt="" width="20" height="20" /><input asp-for="Identifier" autocomplete="username" placeholder="Nhập email hoặc số điện thoại" required maxlength="256" aria-describedby="identifier-error" /></div>
+            <span asp-validation-for="Identifier" id="identifier-error" class="field-error"></span>
+        </div>
+        <div class="field">
+            <label asp-for="Password">Mật khẩu <span class="required">*</span></label>
+            <div class="input-wrap has-icon"><img src="~/images/auth/key.png" alt="" width="22" height="20" /><input asp-for="Password" autocomplete="current-password" placeholder="••••••••" required maxlength="64" aria-describedby="password-error" /><button class="reveal" type="button" data-password="Password" aria-label="Hiện mật khẩu" aria-pressed="false"><img src="~/images/auth/eye.png" alt="" width="20" height="20" /></button></div>
+            <span asp-validation-for="Password" id="password-error" class="field-error"></span>
+        </div>
+        <div class="form-options"><label class="checkbox"><input asp-for="RememberMe" /> Ghi nhớ đăng nhập</label><a asp-action="ForgotPassword">Quên mật khẩu?</a></div>
+        <button type="submit" class="primary-button" data-idle="Đăng nhập" data-busy="Đang đăng nhập…" data-retry="@(ViewData["RetrySeconds"] ?? 0)">Đăng nhập <img src="~/images/auth/arrow.png" alt="" width="20" height="20" /></button>
+        <p class="switch-form">Chưa có tài khoản? <a asp-action="Register">Đăng ký ngay</a></p>
+    </form>
+</section>

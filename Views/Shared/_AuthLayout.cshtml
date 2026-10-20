@@ -1,0 +1,41 @@
+@{ var action = ViewContext.RouteData.Values["action"]?.ToString(); }
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="same-origin" />
+    <title>@ViewData["Title"] · EduConnect</title>
+    <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <script src="~/js/auth.js" asp-append-version="true" defer></script>
+</head>
+<body class="@(ViewData["MainClass"]?.ToString() == "landing-main" ? "landing-page" : "")">
+    <a class="skip-link" href="#main">Đến nội dung chính</a>
+    <header class="site-header">
+        <a class="brand" asp-controller="Home" asp-action="Index" aria-label="EduConnect — Trang chủ"><img src="~/images/auth/logo.png" alt="EduConnect" width="166" height="27" /></a>
+        <nav aria-label="Điều hướng tài khoản">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="nav-button" asp-controller="Account" asp-action="Overview">Tài khoản</a>
+            <form asp-controller="Account" asp-action="Logout" method="post"><button class="nav-button active" type="submit">Đăng xuất</button></form>
+        }
+        else
+        {
+            <a class="nav-button @(action == "Login" ? "active" : "")" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+            <a class="nav-button @(action != "Login" ? "active" : "")" asp-controller="Account" asp-action="Register">Đăng ký</a>
+        }
+        </nav>
+    </header>
+    <main id="main" class="@ViewData["MainClass"]">@RenderBody()</main>
+    <footer class="site-footer">
+        <p>© @DateTime.Now.Year EduConnect. Nền tảng kết nối gia sư uy tín tại Việt Nam.</p>
+        <nav aria-label="Thông tin EduConnect">
+            <a asp-controller="Home" asp-action="Information" asp-route-section="about">Về EduConnect</a>
+            <a asp-controller="Home" asp-action="Information" asp-route-section="terms">Điều khoản</a>
+            <a asp-controller="Home" asp-action="Information" asp-route-section="privacy">Chính sách bảo mật</a>
+            <a asp-controller="Home" asp-action="Information" asp-route-section="contact">Liên hệ</a>
+        </nav>
+    </footer>
+</body>
+</html>
