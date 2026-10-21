@@ -29,9 +29,9 @@ public sealed class ProfileDataTests(WorkspaceDatabase fixture) : IClassFixture<
         Assert.Null(await service.AddressAsync(other.Id));
         var address=(await service.AddressAsync(user.Id))!;
         var workspaceService=new WorkspaceService(db); var workspace=await workspaceService.GetWorkspaceAsync(user.Id,false,false);
-        await workspaceService.SaveAsync(user.Id,workspace,new NeedForm {SubjectId=fixture.SubjectId,Grade="Lớp 9",Goal="Ôn tập",Format=1,Region=address.PublicRegion,DetailedAddress=address.DiaChiChiTiet,Fee=100000,Publish=true,Days=[1]});
+        await new NhuCauService(db).CapNhatAsync(user.Id,workspace,new NeedForm {SubjectId=fixture.SubjectId,Grade="Lớp 9",Goal="Ôn tập",Format=1,Region=address.PublicRegion,DetailedAddress=address.DiaChiChiTiet,Fee=100000,Publish=true,Days=[1]});
         await service.SaveAddressAsync(user.Id,new() {City="Thành phố mới",DetailedAddress="Địa chỉ mới"});
-        var cards=await workspaceService.MyCardsAsync(user.Id); var need=await workspaceService.OwnedNeedAsync(cards.Single().Id,user.Id);
+        var cards=await new NhuCauService(db).LayDanhSachAsync(user.Id); var need=await new NhuCauService(db).LayDeSuaAsync(cards.Single().Id,user.Id);
         Assert.Equal("Địa chỉ riêng",need!.DiaChiChiTiet); Assert.Equal("Khu vực thử, Thành phố thử",cards.Single().Region);
         Assert.DoesNotContain(typeof(NeedCard).GetProperties(),p=>p.Name.Contains("Address"));
     }
@@ -63,9 +63,9 @@ public sealed class ProfileDataTests(WorkspaceDatabase fixture) : IClassFixture<
         await using var db=fixture.Open(); var user=User(); db.Users.Add(user); await db.SaveChangesAsync();
         var data=new ProfileDataService(db,new TestEnvironment());
         await Assert.ThrowsAsync<InvalidOperationException>(()=>data.SaveAddressAsync(user.Id,new(){City="Thành phố",DetailedAddress="  "}));
-        var service=new WorkspaceService(db);
+        var service=new NhuCauService(db);
         var forged=new WorkspaceViewModel {HasRequiredAddress=true};
-        await Assert.ThrowsAsync<InvalidOperationException>(()=>service.SaveAsync(user.Id,forged,new(){SubjectId=fixture.SubjectId,Grade="Lớp 9",Goal="Thử",Fee=100000}));
+        await Assert.ThrowsAsync<InvalidOperationException>(()=>service.CapNhatAsync(user.Id,forged,new(){SubjectId=fixture.SubjectId,Grade="Lớp 9",Goal="Thử",Fee=100000}));
     }
 
     [Fact]
@@ -75,10 +75,10 @@ public sealed class ProfileDataTests(WorkspaceDatabase fixture) : IClassFixture<
         db.TutorProfiles.Add(new(){Id=Guid.NewGuid(),GiaSuId=user.Id,TrinhDo="Đại học",ChuyenMon="Toán",KinhNghiem="Dạy học",MoTa="Giới thiệu",KhuVuc="Thành phố",TaoLuc=DateTimeOffset.UtcNow});
         await db.SaveChangesAsync();
         var configuration=new Microsoft.Extensions.Configuration.ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?> { ["Workspace:BypassTutorApproval"]="true" }).Build();
-        var service=new WorkspaceService(db,configuration,new TestEnvironment {EnvironmentName="Development"});
-        var workspace=await service.GetWorkspaceAsync(user.Id,true,false); Assert.False(workspace.IsProfileComplete);
+        var service=new NhuCauService(db,configuration,new TestEnvironment {EnvironmentName="Development"});
+        var workspace=await new WorkspaceService(db,configuration,new TestEnvironment {EnvironmentName="Development"}).GetWorkspaceAsync(user.Id,true,false); Assert.False(workspace.IsProfileComplete);
         workspace.HasQualificationFile=true;
-        var error=await Assert.ThrowsAsync<InvalidOperationException>(()=>service.SaveAsync(user.Id,workspace,new(){SubjectId=fixture.SubjectId,Grade="Lớp 9",Goal="Thử",Fee=100000}));
+        var error=await Assert.ThrowsAsync<InvalidOperationException>(()=>service.CapNhatAsync(user.Id,workspace,new(){SubjectId=fixture.SubjectId,Grade="Lớp 9",Goal="Thử",Fee=100000}));
         Assert.Contains("bằng cấp",error.Message);
     }
 }

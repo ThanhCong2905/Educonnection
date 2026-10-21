@@ -11,7 +11,7 @@ namespace KetNoiGiaSu.Controllers;
 public sealed class ProfileDataController(ProfileDataService service) : Controller
 {
     private Guid Owner => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-    private IActionResult Profile(string section = "personal-details") => RedirectToAction("Profile", "Workspace", null, section);
+    private IActionResult Profile(string section = "personal-details") => RedirectToAction("ChiTiet", "HoSoGiaSu", null, section);
     private void Errors() => TempData["ProfileError"] = string.Join(" ", ModelState.Values.SelectMany(x => x.Errors).Select(x => string.IsNullOrWhiteSpace(x.ErrorMessage) ? "Dữ liệu không hợp lệ." : x.ErrorMessage));
     [HttpGet]
     public IActionResult Address() => Profile();

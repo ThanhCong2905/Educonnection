@@ -1,0 +1,11 @@
+@model KetNoiGiaSu.ViewModels.ForgotPasswordViewModel
+@{ ViewData["Title"] = "Quên mật khẩu"; }
+<section class="auth-card" aria-labelledby="page-title">
+    <h1 id="page-title">Quên mật khẩu?</h1><p class="subtitle">Nhập email đã đăng ký để nhận liên kết đặt lại mật khẩu.</p>
+    <form asp-action="QuenMatKhau" method="post" data-auth-form>
+        <div asp-validation-summary="ModelOnly" class="notice error" role="alert"></div>
+        <div class="field"><label asp-for="Email">Email <span class="required">*</span></label><input asp-for="Email" type="email" autocomplete="email" placeholder="nguyen.van.a@example.com" required maxlength="256" /><span asp-validation-for="Email" class="field-error"></span></div>
+        <button class="primary-button" type="submit" data-idle="Gửi liên kết đặt lại" data-busy="Đang gửi…">Gửi liên kết đặt lại</button>
+        <p class="switch-form"><a asp-action="DangNhap">Quay lại đăng nhập</a></p>
+    </form>
+</section>

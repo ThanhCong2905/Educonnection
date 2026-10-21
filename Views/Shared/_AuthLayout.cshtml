@@ -17,13 +17,13 @@
         <nav aria-label="Điều hướng tài khoản">
         @if (User.Identity?.IsAuthenticated == true)
         {
-            <a class="nav-button" asp-controller="Account" asp-action="Overview">Tài khoản</a>
-            <form asp-controller="Account" asp-action="Logout" method="post"><button class="nav-button active" type="submit">Đăng xuất</button></form>
+            <a class="nav-button" asp-controller="TaiKhoan" asp-action="TongQuan">Tài khoản</a>
+            <form asp-controller="TaiKhoan" asp-action="DangXuat" method="post"><button class="nav-button active" type="submit">Đăng xuất</button></form>
         }
         else
         {
-            <a class="nav-button @(action == "Login" ? "active" : "")" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-            <a class="nav-button @(action != "Login" ? "active" : "")" asp-controller="Account" asp-action="Register">Đăng ký</a>
+            <a class="nav-button @(action == "DangNhap" ? "active" : "")" asp-controller="TaiKhoan" asp-action="DangNhap">Đăng nhập</a>
+            <a class="nav-button @(action != "DangNhap" ? "active" : "")" asp-controller="TaiKhoan" asp-action="DangKy">Đăng ký</a>
         }
         </nav>
     </header>

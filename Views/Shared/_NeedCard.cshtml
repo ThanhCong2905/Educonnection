@@ -1,0 +1,19 @@
+@model KetNoiGiaSu.ViewModels.NeedCard
+@using System.Globalization
+@{ var fee = Model.Fee?.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) + "đ"; var unit = Model.FeeUnit switch { 0 => "giờ", 1 => "buổi", 2 => "tháng", _ => "" }; var myList = ViewData["OwnList"] as bool? == true; }
+<article class="need-card h-100">
+    @if(Model.CompatibilityPercent.HasValue){<span class="tag approved">Phù hợp @Model.CompatibilityPercent.Value.ToString("0")%</span>}
+    <div class="card-person"><span class="avatar @(Model.IsTutor ? "" : "avatar-learning")">@Model.Initial</span><div><h3>@Model.OwnerName</h3><span class="small text-muted">@(Model.Format == 0 ? "Trực tuyến" : Model.Region ?? "Học trực tiếp")</span></div></div>
+    <div class="d-flex flex-wrap gap-2"><span class="tag">@Model.Subject</span>@if (!myList && Model.IsTutor && Model.IsTutorApproved) { <span class="tag approved"><img src="~/images/ui/patch-check.svg" width="12" height="12" alt="" /> Hồ sơ đã duyệt</span> }@if (myList) { <span class="tag @(Model.State == KetNoiGiaSu.Models.NeedState.Open ? "approved" : "")">@(Model.State == KetNoiGiaSu.Models.NeedState.Open ? "Đang mở" : Model.State == KetNoiGiaSu.Models.NeedState.Draft ? "Bản nháp" : "Đã đóng")</span> }</div>
+    <div class="card-facts"><p><img src="~/images/ui/mortarboard.svg" width="16" height="16" alt="" />@(Model.IsTutor && !myList ? Model.Qualification : Model.Grade)</p><p><img src="~/images/ui/calendar3.svg" width="16" height="16" alt="" />@(Model.WeeklySessions.HasValue ? Model.WeeklySessions + " buổi / tuần" : "Trao đổi về lịch học") <span>· @(Model.Format == 0 ? "Online" : "Trực tiếp")</span></p></div>
+    <p class="card-goal">@(string.IsNullOrWhiteSpace(Model.Goal) ? "Xem chi tiết để tìm hiểu điều kiện và mục tiêu học tập." : Model.Goal)</p>
+    <div class="card-fee"><small>@(Model.IsTutor ? "Học phí mong muốn" : "Ngân sách dự kiến")</small><p>@(Model.Fee.HasValue ? fee : "Thỏa thuận") @if (Model.Fee.HasValue) { <span>/ @unit</span> }</p></div>
+    @if (myList)
+    { <div class="d-flex gap-2"><a class="btn btn-outline-pink flex-grow-1" asp-controller="NhuCau" asp-action="Sua" asp-route-id="@Model.Id">Chỉnh sửa</a>@if (Model.State != KetNoiGiaSu.Models.NeedState.Closed) { <form asp-controller="NhuCau" asp-action="Dong" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="btn btn-light" type="submit">Đóng</button></form> }</div> }
+    else
+    {
+        <a class="btn btn-pink w-100" asp-controller="@(Model.IsTutor ? "HoSoGiaSu" : "NhuCau")" asp-action="ChiTiet" asp-route-id="@(Model.IsTutor ? Model.OwnerId : Model.Id)" asp-route-needId="@(Model.IsTutor ? Model.Id : null)">@(Model.IsTutor ? "Xem chi tiết hồ sơ" : "Xem chi tiết nhu cầu") <span aria-hidden="true">→</span></a>
+        @if(ViewData["AllowComparison"] as bool? == true)
+        { <label class="compare-checkbox"><input type="checkbox" class="form-check-input" data-compare data-id="@Model.Id" data-name="@Model.OwnerName" data-subject="@Model.Subject" data-grade="@Model.Grade" data-format="@(Model.Format == 0 ? "Trực tuyến" : "Trực tiếp")" data-region="@(Model.Format == 0 ? "Không giới hạn khu vực" : Model.Region)" data-fee="@(Model.Fee.HasValue ? fee + " / " + unit : "Thỏa thuận")" data-weekly="@(Model.WeeklySessions.HasValue ? Model.WeeklySessions + " buổi / tuần" : "Chưa công bố")" />Chọn so sánh</label> }
+    }
+</article>

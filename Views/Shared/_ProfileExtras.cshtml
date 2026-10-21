@@ -10,7 +10,7 @@
 </section>
 @if (Model.Workspace.IsTutor) {
 <section id="qualifications-files" class="surface profile-section my-4"><h2>Bằng cấp, chứng chỉ & minh chứng kinh nghiệm</h2><p class="text-muted">Tài liệu riêng tư phục vụ xét duyệt hồ sơ, không công khai với người tìm kiếm.</p>
-@if (Model.Workspace.MyProfile == null) { <p>Lưu hồ sơ chuyên môn trước khi thêm tệp minh chứng.</p><a class="btn btn-outline-pink" asp-controller="Workspace" asp-action="EditProfile">Tạo hồ sơ chuyên môn</a> }
+@if (Model.Workspace.MyProfile == null) { <p>Lưu hồ sơ chuyên môn trước khi thêm tệp minh chứng.</p><a class="btn btn-outline-pink" asp-controller="HoSoGiaSu" asp-action="Sua">Tạo hồ sơ chuyên môn</a> }
 else { <form asp-controller="ProfileData" asp-action="Upload" method="post" enctype="multipart/form-data" data-workspace-form><label for="proof-file" class="form-label">Đính kèm tài liệu</label><input class="form-control" id="proof-file" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required /><p class="form-text">PDF, JPG, PNG; tối đa 10 MB/tệp, 10 tệp/hồ sơ. Tệp chưa được quét mã độc tự động.</p><button class="btn btn-pink" type="submit">Tải minh chứng lên</button></form> }
 <h3 class="mt-4">Tệp đã đính kèm (@Model.Files.Count/10)</h3>
 @if(Model.Files.Count==0) { <p class="text-muted">Chưa có minh chứng.</p> }

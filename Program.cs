@@ -30,14 +30,20 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 }).AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
 builder.Services.AddScoped<IPasswordValidator<ApplicationUser>, PasswordPolicy>();
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromMinutes(30));
-builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<TaiKhoanService>();
 builder.Services.AddScoped<WorkspaceService>();
 builder.Services.AddScoped<ProfileDataService>();
-builder.Services.AddScoped<CommunicationService>();
-builder.Services.AddHostedService<ConnectionExpiryWorker>();
+builder.Services.AddScoped<NhuCauService>();
+builder.Services.AddScoped<HoSoGiaSuService>();
+builder.Services.AddScoped<TimKiemService>();
+builder.Services.AddScoped<QuyenTuongTacService>();
+builder.Services.AddScoped<KetNoiService>();
+builder.Services.AddScoped<TinNhanService>();
+builder.Services.AddScoped<LopHocService>();
+builder.Services.AddHostedService<BaoTriWorker>();
 builder.Services.AddScoped<AccountEmailSender>();
 builder.Services.AddScoped<SessionCookieEvents>();
-builder.Services.AddAuthentication(AccountService.Scheme).AddCookie(AccountService.Scheme, options =>
+builder.Services.AddAuthentication(TaiKhoanService.Scheme).AddCookie(TaiKhoanService.Scheme, options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";

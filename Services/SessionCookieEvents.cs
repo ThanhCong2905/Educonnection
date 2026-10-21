@@ -39,7 +39,7 @@ public sealed class SessionCookieEvents(AppDbContext db) : CookieAuthenticationE
                 await db.Sessions.Where(x => x.Id == sessionId && x.TaiKhoanId == rejectedUserId && x.ThuHoiLuc == null)
                     .ExecuteUpdateAsync(s => s.SetProperty(x => x.ThuHoiLuc, now).SetProperty(x => x.LyDoThuHoi, "Phiên hết hạn hoặc quyền đã thay đổi"));
             context.RejectPrincipal();
-            await context.HttpContext.SignOutAsync(AccountService.Scheme);
+            await context.HttpContext.SignOutAsync(TaiKhoanService.Scheme);
         }
     }
 

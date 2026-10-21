@@ -1,8 +1,4 @@
-﻿-- SQL Server 2022. Khoi tao tren database MOI; khong xoa database dang co.
--- PHIEN BAN v3 - phuong an chot 20/10/2026.
--- LichHoc: khung lich theo tuan; BuoiHoc: tung buoi cu the.
--- Script khoi tao database MOI, khong phai migration.
-
+﻿
 USE master;
 
 GO

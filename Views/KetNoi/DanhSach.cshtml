@@ -1,0 +1,25 @@
+@model KetNoiGiaSu.ViewModels.ConnectionsViewModel
+@using KetNoiGiaSu.Models
+@{ ViewData["Title"]="Kết nối"; var actor=Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value); }
+<div class="page-heading"><div><p class="overline">CÙNG NHAU BẮT ĐẦU</p><h1>Kết nối của bạn</h1><p>Trao đổi nhu cầu, thống nhất điều kiện và xác nhận lớp học. Lời mời và đề xuất có hiệu lực trong 72 giờ.</p></div><a class="btn btn-outline-pink" asp-controller="TimKiem" asp-action="Tim">Tìm kiếm kết nối</a></div>
+@if(Model.Items.Count==0) {<section class="empty-state surface"><h2>Chưa có yêu cầu kết nối</h2><p>Chọn người phù hợp trong tìm kiếm và gửi lời nhắn giới thiệu.</p></section>}
+<div class="connection-list">
+@foreach(var item in Model.Items) {
+ var r=item.Request;var pending=r.TrangThai is ConnectionState.Requested or ConnectionState.Proposed;
+ var state=r.TrangThai switch {ConnectionState.Requested=>"Chờ đề xuất lớp",ConnectionState.Proposed=>"Chờ bên học xác nhận",ConnectionState.Accepted=>"Đã kết nối",ConnectionState.Rejected=>"Đã từ chối",ConnectionState.Cancelled=>"Đã thu hồi",_=>"Đã hết hạn"};
+ <article class="surface profile-section connection-card"><div class="d-flex justify-content-between gap-3 flex-wrap"><div><p class="overline">@(item.IsSender?"BẠN ĐÃ GỬI LỜI MỜI":"LỜI MỜI DÀNH CHO BẠN")</p><h2>@item.OtherName</h2></div><span class="tag @(r.TrangThai==ConnectionState.Accepted?"approved":"")">@state</span></div>
+ <p class="preserve-lines mt-3">@r.LoiNhan</p>
+ @if(r.TenLopDuKien!=null) {<div class="proposal-summary"><h3>@r.TenLopDuKien</h3><dl><dt>Mục tiêu</dt><dd class="preserve-lines">@r.MucTieu</dd><dt>Lịch dự kiến</dt><dd class="preserve-lines">@r.LichDuKien</dd><dt>Thời lượng</dt><dd>@r.SoBuoiTuan buổi/tuần · @r.ThoiLuongPhut phút/buổi</dd><dt>Hình thức</dt><dd>@(r.HinhThucHoc==0?"Trực tuyến":"Trực tiếp")</dd>@if(r.HinhThucHoc==1){<dt>Địa điểm riêng</dt><dd>@r.DiaDiem</dd>}<dt>Học phí</dt><dd class="text-pink">@r.HocPhi?.ToString("N0",System.Globalization.CultureInfo.GetCultureInfo("vi-VN"))đ / @(r.DonViHocPhi==0?"giờ":r.DonViHocPhi==1?"buổi":"tháng")</dd></dl></div>}
+ <p class="small text-muted">Gửi @r.GuiLuc.ToLocalTime().ToString("dd/MM/yyyy HH:mm") @if(pending){<span>· Hạn phản hồi @r.HetHanLuc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>}</p>
+ <div class="d-flex flex-wrap gap-2">
+ <form asp-controller="TinNhan" asp-action="MoHoiThoai" method="post"><input type="hidden" name="target" value="@(r.GiaSuId==actor?r.BenHocId:r.GiaSuId)" /><button class="btn btn-outline-pink" type="submit">Nhắn tin</button></form>
+ @if(pending) {
+  @if(r.GiaSuId==actor) {<a class="btn btn-pink" asp-controller="KetNoi" asp-action="GuiDeXuat" asp-route-id="@r.Id">@(r.TrangThai==ConnectionState.Proposed?"Sửa đề xuất lớp":"Đề xuất lớp học")</a>}
+  @if(r.TrangThai==ConnectionState.Proposed && r.BenHocId==actor) {<form asp-controller="KetNoi" asp-action="PhanHoi" method="post"><input type="hidden" name="id" value="@r.Id" /><input type="hidden" name="version" value="@Convert.ToBase64String(r.RowVersion)" /><button class="btn btn-pink" name="decision" value="accept">Đồng ý & tạo lớp</button></form>}
+  var canWithdraw=r.TrangThai==ConnectionState.Proposed?r.GiaSuId==actor:item.IsSender;
+  <form asp-controller="KetNoi" asp-action="PhanHoi" method="post"><input type="hidden" name="id" value="@r.Id" /><input type="hidden" name="version" value="@Convert.ToBase64String(r.RowVersion)" /><button class="btn btn-light" name="decision" value="@(canWithdraw?"cancel":"reject")">@(canWithdraw?"Thu hồi":"Từ chối")</button></form>
+ }
+ @if(r.TrangThai==ConnectionState.Accepted){<a class="btn btn-pink" asp-controller="LopHoc" asp-action="DanhSach">Xem lớp học</a>}
+ </div></article>
+}
+</div>

@@ -3,11 +3,12 @@
 @{
     var workspace = ViewData["Workspace"] as WorkspaceViewModel ?? Model as WorkspaceViewModel ?? new WorkspaceViewModel();
     var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var role = workspace.IsTutor ? "Gia sư" : workspace.IsParent ? "Phụ huynh" : "Học sinh";
     var initial = User.Identity?.Name?.Split(' ', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()?[..1] ?? "E";
-    var routes = new[] { ("Index", "", "house-door", "Trang chủ"), ("Search", "", "search", workspace.IsTutor ? "Tìm kiếm học sinh" : "Tìm kiếm gia sư"),
-        ("Needs", "", "journal-text", workspace.IsTutor ? "Nhu cầu dạy" : "Nhu cầu học"), ("Connections", "", "link-45deg", "Kết nối"),
-        ("Classes", "", "collection", "Lớp học"), ("Messages", "", "chat-dots", "Tin nhắn"), ("Section", "notifications", "bell", "Thông báo") };
+    var routes = new[] { ("Index", "", "house-door", "Trang chủ", "Workspace"), ("Tim", "", "search", workspace.IsTutor ? "Tìm kiếm học sinh" : "Tìm kiếm gia sư", "TimKiem"),
+        ("Index", "", "journal-text", workspace.IsTutor ? "Nhu cầu dạy" : "Nhu cầu học", "NhuCau"), ("DanhSach", "", "link-45deg", "Kết nối", "KetNoi"),
+        ("DanhSach", "", "collection", "Lớp học", "LopHoc"), ("DanhSachHoiThoai", "", "chat-dots", "Tin nhắn", "TinNhan"), ("Section", "notifications", "bell", "Thông báo", "Workspace") };
 }
 <!DOCTYPE html>
 <html lang="vi"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="referrer" content="same-origin" />
@@ -26,8 +27,8 @@
     <nav class="collapse show workspace-nav" id="workspace-nav" aria-label="Điều hướng chính">
     @foreach (var route in routes)
     {
-        var selected = route.Item1 == action && (route.Item1 != "Section" || Context.Request.Query["name"] == route.Item2);
-        <a class="side-link @(selected ? "selected" : "")" asp-controller="Workspace" asp-action="@route.Item1" asp-route-name="@(string.IsNullOrEmpty(route.Item2) ? null : route.Item2)" aria-current="@(selected ? "page" : null)"><img src="~/images/ui/@(route.Item3).svg" width="20" height="20" alt="" />@route.Item4</a>
+        var selected = route.Item5 == controller && route.Item1 == action && (route.Item1 != "Section" || Context.Request.Query["name"] == route.Item2);
+        <a class="side-link @(selected ? "selected" : "")" asp-controller="@route.Item5" asp-action="@route.Item1" asp-route-name="@(string.IsNullOrEmpty(route.Item2) ? null : route.Item2)" aria-current="@(selected ? "page" : null)"><img src="~/images/ui/@(route.Item3).svg" width="20" height="20" alt="" />@route.Item4</a>
     }
     </nav>
     <div class="sidebar-bottom">
@@ -35,11 +36,11 @@
         <div class="dropdown account-menu">
             <button class="account-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="avatar">@initial</span><span class="account-name"><strong>@User.Identity?.Name</strong><small>@role</small></span><img src="~/images/ui/chevron-expand.svg" width="16" height="16" alt="Mở menu tài khoản" /></button>
             <ul class="dropdown-menu shadow-sm">
-                <li><a class="dropdown-item" asp-controller="Workspace" asp-action="Profile">Hồ sơ cá nhân</a></li>
+                <li><a class="dropdown-item" asp-controller="HoSoGiaSu" asp-action="ChiTiet">Hồ sơ cá nhân</a></li>
                 <li><a class="dropdown-item" asp-controller="Workspace" asp-action="Status">Trạng thái xử lý</a></li>
-                <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a></li>
+                <li><a class="dropdown-item" asp-controller="TaiKhoan" asp-action="DoiMatKhau">Đổi mật khẩu</a></li>
                 <li><hr class="dropdown-divider" /></li>
-                <li><form asp-controller="Account" asp-action="Logout" method="post"><button class="dropdown-item text-danger" type="submit">Đăng xuất</button></form></li>
+                <li><form asp-controller="TaiKhoan" asp-action="DangXuat" method="post"><button class="dropdown-item text-danger" type="submit">Đăng xuất</button></form></li>
             </ul>
         </div>
     </div>

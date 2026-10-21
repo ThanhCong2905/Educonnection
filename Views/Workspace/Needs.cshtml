@@ -1,8 +1,0 @@
-@model KetNoiGiaSu.ViewModels.WorkspaceViewModel
-@{ ViewData["Title"] = Model.Title; ViewData["OwnList"] = true; var active = ViewData["State"]?.ToString() ?? ""; }
-<div class="page-heading"><div><p class="overline">KẾ HOẠCH CỦA BẠN</p><h1>@Model.Title của tôi</h1><p>@(Model.IsTutor ? "Chia sẻ môn dạy, đối tượng và điều kiện nhận lớp." : Model.IsParent ? "Quản lý nhu cầu học riêng cho từng người học bạn đại diện." : "Chia sẻ mục tiêu và tìm người đồng hành phù hợp.")</p></div><a class="btn btn-pink" asp-action="EditNeed"><img src="~/images/ui/plus-lg.svg" width="16" height="16" alt="" />Tạo nhu cầu mới</a></div>
-@if (!Model.CanPublish) { <partial name="_ApprovalNotice" model="Model" /> }
-<nav class="filter-tabs" aria-label="Trạng thái nhu cầu">@foreach (var tab in new[] { ("", "Tất cả"), ("Open", "Đang mở"), ("Draft", "Bản nháp"), ("Closed", "Đã đóng") }) { <a class="@(active == tab.Item1 ? "selected" : "")" asp-action="Needs" asp-route-state="@tab.Item1">@tab.Item2</a> }</nav>
-@if (Model.Cards.Count == 0)
-{ <div class="empty-state surface"><span class="empty-icon"><img src="~/images/ui/journal-text.svg" width="36" height="36" alt="" /></span><h2>@(string.IsNullOrEmpty(active) ? "Bạn chưa có nhu cầu nào" : "Chưa có nhu cầu ở trạng thái này")</h2><p>Một nhu cầu rõ ràng là khởi đầu để tìm được kết nối phù hợp.</p><a class="btn btn-pink" asp-action="EditNeed">Tạo nhu cầu đầu tiên</a></div> }
-else { <div class="row g-4">@foreach(var card in Model.Cards) { <div class="col-md-6 col-xl-4"><partial name="_NeedCard" model="card" /></div> }</div> }

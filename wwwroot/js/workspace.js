@@ -16,7 +16,7 @@
     const compareInputs = document.querySelectorAll('[data-compare]');
     const tray = document.getElementById('compare-tray');
     const selection = new Map();
-    const canCompare = document.body.dataset.screen === 'Search';
+    const canCompare = document.body.dataset.screen === 'Tim';
     const storageKey = 'educonnect-comparison-v2:' + document.body.dataset.accountId;
     try {
         const saved = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
