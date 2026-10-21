@@ -1,0 +1,8 @@
+@model KetNoiGiaSu.ViewModels.ConnectionsViewModel
+@using KetNoiGiaSu.Models
+@using KetNoiGiaSu.ViewModels
+@if(Model.Contacts.Count>0){<section class="section-space"><h2 class="fs-4 mb-3">Yêu cầu liên hệ</h2><div class="row g-4">
+@foreach(var item in Model.Contacts){var c=item.Request;<div class="col-lg-6"><article class="surface profile-section"><p class="overline">@(item.IsSender?"BẠN ĐÃ GỬI LIÊN HỆ":"LIÊN HỆ DÀNH CHO BẠN")</p><h3 class="fs-5">@item.OtherName</h3><p class="preserve-lines">@c.LoiNhan</p><p class="small text-muted">@(c.TrangThai switch {ContactState.Pending=>"Chờ chấp nhận",ContactState.Accepted=>"Đã chấp nhận",ContactState.Rejected=>"Đã từ chối",_=>"Đã rút yêu cầu"})</p>
+<partial name="_ContactPanel" model="@(new ContactPanelViewModel {Owner=Model.Workspace.UserId,Target=Model.Workspace.IsTutor?c.BenHocId:c.GiaSuId,Contact=c,CanInteract=!Model.Workspace.IsTutor||Model.Workspace.CanPublish})" />
+</article></div>}
+</div></section>}

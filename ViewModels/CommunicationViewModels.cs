@@ -28,7 +28,9 @@ public sealed class ConnectionsViewModel
 {
     public WorkspaceViewModel Workspace { get; set; } = new();
     public List<ConnectionItem> Items { get; set; } = [];
+    public List<ContactItem> Contacts { get; set; } = [];
 }
+public sealed record ContactItem(ContactRequest Request, string OtherName, bool IsSender);
 public sealed class ProposalViewModel
 {
     public WorkspaceViewModel Workspace { get; set; } = new();

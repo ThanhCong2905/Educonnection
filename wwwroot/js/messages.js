@@ -4,6 +4,14 @@
  if(!panel?.dataset.selected || !form || !stream)return;
  const feedback=document.getElementById('chat-feedback'),input=document.getElementById('chat-text'),button=form.querySelector('button');
  let busy=false,reading=false,stopped=false;
+ let composing=false;
+ input.addEventListener('compositionstart',()=>{composing=true;});
+ input.addEventListener('compositionend',()=>{composing=false;});
+ input.addEventListener('keydown',event=>{
+  if(event.key!=='Enter'||event.shiftKey||event.isComposing||composing||event.keyCode===229)return;
+  event.preventDefault();
+  if(!busy&&!event.repeat&&input.value.trim())form.requestSubmit();
+ });
  const render=messages=>{
   const nearBottom=stream.scrollHeight-stream.scrollTop-stream.clientHeight<80;
   const ids=[...stream.querySelectorAll('[data-message-id]')].map(x=>x.dataset.messageId);

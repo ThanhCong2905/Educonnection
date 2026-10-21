@@ -43,6 +43,8 @@ public sealed class ProfileDataController(ProfileDataService service) : Controll
     }
     [HttpPost, Authorize(Roles="GiaSu")]
     public async Task<IActionResult> Delete(Guid id) {
-        await service.DeleteAsync(Owner,id); TempData["Success"]="Đã xóa minh chứng."; return Profile("qualifications-files");
+        try {await service.DeleteAsync(Owner,id); TempData["Success"]="Đã xóa minh chứng.";}
+        catch(InvalidOperationException ex){TempData["ProfileError"]=ex.Message;}
+        return Profile("qualifications-files");
     }
 }

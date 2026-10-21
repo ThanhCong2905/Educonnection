@@ -35,6 +35,9 @@ builder.Services.AddScoped<WorkspaceService>();
 builder.Services.AddScoped<ProfileDataService>();
 builder.Services.AddScoped<NhuCauService>();
 builder.Services.AddScoped<HoSoGiaSuService>();
+builder.Services.AddScoped<DieuKienNhanLopService>();
+builder.Services.AddScoped<LienHeService>();
+builder.Services.AddScoped<KiemDuyetHoSoService>();
 builder.Services.AddScoped<TimKiemService>();
 builder.Services.AddScoped<QuyenTuongTacService>();
 builder.Services.AddScoped<KetNoiService>();
@@ -93,6 +96,7 @@ app.UseRouting();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles(); // Also serve validated avatar uploads created after the build.
 
 app.MapStaticAssets();
 

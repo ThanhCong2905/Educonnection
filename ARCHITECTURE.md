@@ -1,5 +1,7 @@
 # Cấu trúc theo sơ đồ lớp
 
+> Luồng hồ sơ gia sư và liên hệ đã được cập nhật sau lần tách lớp ban đầu. Xem [TUTOR-CONTACT-IMPLEMENTATION.md](TUTOR-CONTACT-IMPLEMENTATION.md) để biết hành vi và schema hiện tại: không còn nhu cầu dạy; có điều kiện nhận lớp, bản sửa chờ duyệt và chấp nhận liên hệ trước chat/kết nối.
+
 Các chức năng đã có được chia theo nghiệp vụ. Controller nhận HTTP, kiểm tra biểu mẫu và trả View/JSON; service xử lý truy vấn và cập nhật dữ liệu. `Data/AppDbContext.cs` tiếp tục ánh xạ entity vào các bảng hiện có.
 
 | Nghiệp vụ | Controller | Service | Thư mục View |

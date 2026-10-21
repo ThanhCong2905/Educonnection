@@ -5,14 +5,16 @@ namespace KetNoiGiaSu.ViewModels;
 
 public sealed class WorkspaceViewModel
 {
+    public Guid UserId { get; set; }
     public bool IsTutor { get; set; }
     public bool IsParent { get; set; }
     public bool HasRequiredAddress { get; set; }
     public bool HasQualificationFile { get; set; }
-    public bool IsProfileComplete => HasRequiredAddress && (!IsTutor || (MyProfile != null && HasQualificationFile));
+    public bool HasTutorConditions { get; set; }
+    public bool IsProfileComplete => IsTutor ? MyProfile != null && HasQualificationFile && HasTutorConditions && !string.IsNullOrWhiteSpace(MyProfile.TruongDaoTao) && !string.IsNullOrWhiteSpace(MyProfile.TenHienThi) && !string.IsNullOrWhiteSpace(MyProfile.AnhDaiDien) : HasRequiredAddress;
     public TutorProfile? MyProfile { get; set; }
     public bool ApprovalBypassed { get; set; }
-    public bool CanPublish => !IsTutor || (ApprovalBypassed && MyProfile != null) || MyProfile?.TrangThaiDuyet == ProfileReviewState.Approved;
+    public bool CanPublish => !IsTutor || (IsProfileComplete && MyProfile?.TrangThaiDuyet == ProfileReviewState.Approved);
     public string Title { get; set; } = "";
     public List<Subject> Subjects { get; set; } = [];
     public List<NeedCard> Cards { get; set; } = [];
@@ -24,6 +26,10 @@ public sealed class WorkspaceViewModel
 
 public sealed class NeedCard
 {
+    public ContactRequest? Contact { get; set; }
+    public string? Avatar { get; set; }
+    public bool SupportsOnline { get; set; }
+    public bool SupportsInPerson { get; set; }
     public bool IsTutorApproved { get; set; }
     // Supplied only by a validated compatibility calculation, never a public rating.
     public decimal? CompatibilityPercent { get; set; }
@@ -49,6 +55,10 @@ public sealed class NeedCard
 
 public sealed class SearchInput
 {
+    [StringLength(200)] public string? Qualification { get; set; }
+    [Range(0,6)] public int? Day { get; set; }
+    public TimeOnly? From { get; set; }
+    public TimeOnly? To { get; set; }
     [StringLength(150)] public string? Q { get; set; }
     public int? SubjectId { get; set; }
     [StringLength(100)] public string? Grade { get; set; }
@@ -95,4 +105,8 @@ public sealed class ProfileDetailViewModel
     public List<string> Subjects { get; set; } = [];
     public List<NeedCard> Needs { get; set; } = [];
     public Guid? SelectedNeedId { get; set; }
+    public TutorConditions? Conditions { get; set; }
+    public List<TutorAvailability> Availability { get; set; } = [];
+    public TutorProfileRevision? LatestRevision { get; set; }
+    public ContactRequest? Contact { get; set; }
 }

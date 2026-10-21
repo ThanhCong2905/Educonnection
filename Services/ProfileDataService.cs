@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text.Json;
 using KetNoiGiaSu.Data;
 using KetNoiGiaSu.Models;
 using KetNoiGiaSu.ViewModels;
@@ -75,8 +76,9 @@ public sealed class ProfileDataService(AppDbContext db, IWebHostEnvironment envi
             db.ProfileAttachments.Add(new() { Id = Guid.NewGuid(), NguoiTaiLenId = owner, HoSoGiaSuId = profile.Id,
                 TenGoc = name, TenLuuTru = stored, LoaiNoiDung = contentType, KichThuoc = bytes.Length,
                 Checksum = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(), TrangThaiQuet = 0, TaoLuc = DateTimeOffset.UtcNow });
-            profile.TrangThaiDuyet = ProfileReviewState.Pending; profile.NguoiDuyetId = null; profile.DuyetLuc = null; profile.LyDoTuChoi = null;
-            await db.SaveChangesAsync(); await transaction.CommitAsync();
+            await db.SaveChangesAsync();
+            await RefreshPendingEvidenceAsync(profile.Id);
+            await transaction.CommitAsync();
         } catch { if (File.Exists(path)) File.Delete(path); throw; }
     }
 
@@ -95,8 +97,19 @@ public sealed class ProfileDataService(AppDbContext db, IWebHostEnvironment envi
         var file = await db.ProfileAttachments.SingleOrDefaultAsync(x => x.Id == id && x.NguoiTaiLenId == owner && x.HoSoGiaSuId != null);
         if (file == null) return;
         var profile = await db.TutorProfiles.SingleAsync(x => x.Id == file.HoSoGiaSuId);
-        profile.TrangThaiDuyet = ProfileReviewState.Pending; profile.NguoiDuyetId = null; profile.DuyetLuc = null; profile.LyDoTuChoi = null;
-        db.ProfileAttachments.Remove(file); await db.SaveChangesAsync(); await transaction.CommitAsync();
+        var approvedEvidence=await db.TutorProfileRevisions.AsNoTracking().Where(x=>x.HoSoGiaSuId==profile.Id&&x.TrangThai==ProfileReviewState.Approved).Select(x=>x.MinhChungJson).ToListAsync();
+        if(approvedEvidence.Any(json=>(JsonSerializer.Deserialize<List<Guid>>(json)??[]).Contains(id)))
+            throw new InvalidOperationException("Minh chứng đã dùng để duyệt hồ sơ được giữ lại. Bạn có thể bổ sung minh chứng mới.");
+        if(approvedEvidence.Count==0) {profile.TrangThaiDuyet = ProfileReviewState.Pending; profile.NguoiDuyetId = null; profile.DuyetLuc = null; profile.LyDoTuChoi = null;}
+        db.ProfileAttachments.Remove(file); await db.SaveChangesAsync(); await RefreshPendingEvidenceAsync(profile.Id); await transaction.CommitAsync();
         if (Guid.TryParseExact(file.TenLuuTru, "N", out _)) File.Delete(Path.Combine(Storage, file.TenLuuTru));
+    }
+
+    private async Task RefreshPendingEvidenceAsync(Guid profileId)
+    {
+        var revision=await db.TutorProfileRevisions.SingleOrDefaultAsync(x=>x.HoSoGiaSuId==profileId&&x.TrangThai==ProfileReviewState.Pending);
+        if(revision==null)return;
+        revision.MinhChungJson=JsonSerializer.Serialize(await db.ProfileAttachments.Where(x=>x.HoSoGiaSuId==profileId).Select(x=>x.Id).ToListAsync());
+        revision.TaoLuc=DateTimeOffset.UtcNow;await db.SaveChangesAsync();
     }
 }

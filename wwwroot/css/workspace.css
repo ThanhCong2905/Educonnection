@@ -32,3 +32,5 @@
 .comparison-table .comparison-price td{font-weight:700;color:var(--accent);font-size:15px;background:#fff8fb}
 .need-card .card-person>div{min-width:0}.need-card .card-person h3{overflow-wrap:anywhere}
 @media(max-width:767px){#comparison-modal .modal-dialog{padding:0 8px}#comparison-modal .modal-header{padding:20px 18px 14px}#comparison-modal .modal-title{font-size:19px!important}#comparison-content{padding:16px 14px 20px}.comparison-table{min-width:660px}.comparison-table th:first-child{width:116px}.comparison-table thead th{width:calc((100% - 116px)/var(--comparison-count))}.comparison-table th,.comparison-table td{padding:16px 14px}.comparison-name{font-size:14px}.comparison-intro:after{content:' Vuốt ngang bảng để xem đủ các lựa chọn.'}}
+
+.contact-locked{filter:blur(1.2px);opacity:.5;user-select:none}.contact-locked fieldset{pointer-events:none}.tutor-avatar{object-fit:cover;border-radius:50%;flex-shrink:0}

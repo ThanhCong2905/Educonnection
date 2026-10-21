@@ -69,7 +69,7 @@ public sealed class ProfileDataTests(WorkspaceDatabase fixture) : IClassFixture<
     }
 
     [Fact]
-    public async Task DevelopmentBypassStillRequiresQualificationFile() {
+    public async Task DevelopmentBypassCannotEnableTutorNeedPosting() {
         await using var db=fixture.Open(); var user=User(); db.Users.Add(user); await db.SaveChangesAsync();
         db.PersonalProfiles.Add(new(){TaiKhoanId=user.Id,ThanhPho="Thành phố",DiaChiChiTiet="Địa chỉ riêng"});
         db.TutorProfiles.Add(new(){Id=Guid.NewGuid(),GiaSuId=user.Id,TrinhDo="Đại học",ChuyenMon="Toán",KinhNghiem="Dạy học",MoTa="Giới thiệu",KhuVuc="Thành phố",TaoLuc=DateTimeOffset.UtcNow});
@@ -79,6 +79,6 @@ public sealed class ProfileDataTests(WorkspaceDatabase fixture) : IClassFixture<
         var workspace=await new WorkspaceService(db,configuration,new TestEnvironment {EnvironmentName="Development"}).GetWorkspaceAsync(user.Id,true,false); Assert.False(workspace.IsProfileComplete);
         workspace.HasQualificationFile=true;
         var error=await Assert.ThrowsAsync<InvalidOperationException>(()=>service.CapNhatAsync(user.Id,workspace,new(){SubjectId=fixture.SubjectId,Grade="Lớp 9",Goal="Thử",Fee=100000}));
-        Assert.Contains("bằng cấp",error.Message);
+        Assert.Contains("không đăng nhu cầu dạy",error.Message);
     }
 }

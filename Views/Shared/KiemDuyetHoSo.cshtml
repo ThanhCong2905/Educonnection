@@ -1,0 +1,9 @@
+@model List<KetNoiGiaSu.ViewModels.ProfileReviewItem>
+@{ Layout="_AuthLayout";ViewData["Title"]="Xét duyệt hồ sơ gia sư"; }
+<section class="auth-card"><h1>Xét duyệt hồ sơ gia sư</h1>
+@if(TempData["Success"] is string success){<p role="status">@success</p>}@if(TempData["Error"] is string error){<p role="alert">@error</p>}
+@if(Model.Count==0){<p>Không có hồ sơ đang chờ duyệt.</p>}
+@foreach(var item in Model){var r=item.Revision;<article class="review-profile"><h2>@r.TenHienThi</h2><img src="@r.AnhDaiDien" width="80" height="80" alt="Ảnh hồ sơ" /><dl><dt>Trình độ</dt><dd>@r.TrinhDo</dd><dt>Trường / chuyên ngành</dt><dd>@r.TruongDaoTao / @r.ChuyenNganh</dd><dt>Tình trạng học tập</dt><dd>@(r.TinhTrangHocTap=="DaTotNghiep"?"Đã tốt nghiệp":"Đang học")</dd><dt>Chuyên môn</dt><dd>@r.ChuyenMon</dd><dt>Kinh nghiệm</dt><dd>@r.KinhNghiem</dd><dt>Giới thiệu</dt><dd>@r.MoTa</dd><dt>Phạm vi dạy</dt><dd>@string.Join("; ",item.Subjects)</dd></dl>
+<h3>Minh chứng riêng tư</h3>@foreach(var file in item.Evidence){<p><a asp-controller="QuanTri" asp-action="MinhChung" asp-route-id="@r.Id" asp-route-fileId="@file.Id">@file.TenGoc</a></p>}
+<form asp-controller="QuanTri" asp-action="DuyetHoSo" method="post"><input type="hidden" name="id" value="@r.Id" /><input type="hidden" name="version" value="@Convert.ToBase64String(r.RowVersion)" /><label for="reason-@r.Id">Lý do nếu từ chối</label><textarea id="reason-@r.Id" name="reason" maxlength="1000" rows="3"></textarea><button type="submit" name="approve" value="true" class="primary-button">Duyệt hồ sơ</button><button type="submit" name="approve" value="false" class="secondary-button">Từ chối</button></form></article>}
+</section>

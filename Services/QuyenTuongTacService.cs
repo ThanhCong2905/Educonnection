@@ -25,14 +25,17 @@ public sealed class QuyenTuongTacService(AppDbContext db, IConfiguration configu
         if(roles.Contains("GiaSu") && targetRoles.Any(x=>x is "HocSinh" or "PhuHuynh")) {tutor=actor;learner=target;}
         else if(targetRoles.Contains("GiaSu") && roles.Any(x=>x is "HocSinh" or "PhuHuynh")) {tutor=target;learner=actor;}
         else throw new InvalidOperationException("Kết nối chỉ áp dụng giữa gia sư và học sinh/phụ huynh.");
-        foreach(var id in new[]{actor,target})
-            if(!await db.PersonalProfiles.AnyAsync(x=>x.TaiKhoanId==id && x.ThanhPho.Trim()!="" && x.DiaChiChiTiet!=null && x.DiaChiChiTiet.Trim()!=""))
-                throw new InvalidOperationException(id==actor?"Bạn cần hoàn thiện địa chỉ trong hồ sơ cá nhân.":"Đối phương chưa hoàn thiện hồ sơ cá nhân.");
         var profiles=await db.TutorProfiles.FromSqlInterpolated($"SELECT * FROM dbo.HoSoGiaSu WITH (UPDLOCK,HOLDLOCK) WHERE GiaSuId={tutor}").ToListAsync();
         var profile=profiles.SingleOrDefault();
-        if(profile==null || (!Bypass && profile.TrangThaiDuyet!=ProfileReviewState.Approved)) throw new InvalidOperationException("Hồ sơ gia sư cần được xét duyệt trước khi kết nối hoặc nhắn tin.");
-        if(!await db.ProfileAttachments.AnyAsync(x=>x.HoSoGiaSuId==profile.Id && x.NguoiTaiLenId==tutor)) throw new InvalidOperationException("Gia sư cần bổ sung tệp bằng cấp/chứng chỉ.");
+        if(profile==null || !await HoSoGiaSuRules.PublicProfiles(db).AnyAsync(x=>x.Id==profile.Id)) throw new InvalidOperationException("Gia sư cần hoàn thiện và được duyệt hồ sơ trước khi liên hệ, kết nối hoặc nhắn tin.");
         return(tutor,learner);
+    }
+
+    internal async Task RequireAcceptedContactAsync(Guid tutor,Guid learner)
+    {
+        await LockAsync($"contact:{tutor}:{learner}");
+        if(!await db.ContactRequests.AnyAsync(x=>x.GiaSuId==tutor&&x.BenHocId==learner&&x.TrangThai==ContactState.Accepted))
+            throw new InvalidOperationException("Hai bên cần chấp nhận yêu cầu liên hệ trước khi nhắn tin hoặc gửi yêu cầu kết nối.");
     }
 
 }

@@ -11,6 +11,8 @@ if($Action -eq 'Create'){
         $sql=(Get-Content '03_HoSoCaNhan.sql' -Raw -Encoding UTF8).Replace('KetNoiGiaSu',$name)
         foreach($batch in [regex]::Split($sql,'(?im)^\s*GO\s*$')){if($batch.Trim()){ $command=$connection.CreateCommand();$command.CommandText=$batch;$null=$command.ExecuteNonQuery() }}
         $command=$connection.CreateCommand();$command.CommandText=Get-Content '02_DanhMucMonHoc.sql' -Raw -Encoding UTF8;$null=$command.ExecuteNonQuery()
+        $upgrade=Get-Content '04_HoSoGiaSuVaLienHe.sql' -Raw -Encoding UTF8
+        foreach($batch in [regex]::Split($upgrade,'(?im)^\s*GO\s*$')){if($batch.Trim()){ $command=$connection.CreateCommand();$command.CommandText="USE [$name];`n"+$batch;$null=$command.ExecuteNonQuery() }}
         @{Database=$name;ConnectionString="Server=localhost;Database=$name;Integrated Security=True;TrustServerCertificate=True"}|ConvertTo-Json|Set-Content $metaPath -Encoding UTF8
         Write-Output "Created isolated UI test database: $name"
     }finally{$connection.Dispose()}

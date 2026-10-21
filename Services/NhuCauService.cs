@@ -15,8 +15,7 @@ public sealed class NhuCauService(AppDbContext db, IConfiguration? configuration
 
     public Task TaoNhuCauNhanLopAsync(Guid owner, WorkspaceViewModel workspace, NeedForm form)
     {
-        if (!workspace.IsTutor || form.Id.HasValue) throw new InvalidOperationException("Dữ liệu tạo nhu cầu nhận lớp không hợp lệ.");
-        return CapNhatAsync(owner, workspace, form);
+        throw new InvalidOperationException("Nhu cầu dạy đã được thay bằng hồ sơ gia sư và điều kiện nhận lớp.");
     }
 
     private bool BypassApproval => environment?.IsDevelopment() == true && configuration?.GetValue<bool>("Workspace:BypassTutorApproval") == true;
@@ -26,21 +25,13 @@ public sealed class NhuCauService(AppDbContext db, IConfiguration? configuration
         if (accounts.SingleOrDefault()?.TrangThai != 0) throw new InvalidOperationException("Tài khoản không còn hoạt động. Vui lòng đăng nhập lại.");
     }
 
-    internal IQueryable<NeedCard> Catalog(bool tutorListings)
+    internal IQueryable<NeedCard> Catalog()
     {
         var query = from n in db.Needs.AsNoTracking()
                     join s in db.Subjects on n.MonHocId equals s.Id
                     join u in db.Users on n.ChuSoHuuId equals u.Id
                     where u.TrangThai == 0 && s.DangSuDung
                     select new { n, s, u };
-        if (tutorListings)
-            return from x in query
-                   join p in db.TutorProfiles on x.u.Id equals p.GiaSuId
-                   where x.n.LoaiNhuCau == 1 && (BypassApproval || p.TrangThaiDuyet == ProfileReviewState.Approved)
-                   select new NeedCard { Id = x.n.Id, OwnerId = x.u.Id, OwnerName = x.u.HoTen, Subject = x.s.TenMon,
-                       Grade = x.n.KhoiLop, Goal = x.n.MucTieu, Region = x.n.KhuVuc, Format = x.n.HinhThucHoc,
-                       Fee = x.n.HocPhiDuKien, FeeUnit = x.n.DonViHocPhi, WeeklySessions = x.n.SoBuoiTuan,
-                       IsTutor = true, IsTutorApproved = p.TrangThaiDuyet == ProfileReviewState.Approved, Qualification = p.TrinhDo, Experience = p.KinhNghiem, Created = x.n.TaoLuc, State = x.n.TrangThai };
         return query.Where(x => x.n.LoaiNhuCau == 0).Select(x => new NeedCard { Id = x.n.Id, OwnerId = x.u.Id,
             OwnerName = x.u.HoTen, Subject = x.s.TenMon, Grade = x.n.KhoiLop, Goal = x.n.MucTieu,
             Region = x.n.KhuVuc, Format = x.n.HinhThucHoc, Fee = x.n.HocPhiDuKien, FeeUnit = x.n.DonViHocPhi,
@@ -50,7 +41,7 @@ public sealed class NhuCauService(AppDbContext db, IConfiguration? configuration
     public async Task<List<NeedCard>> LayDanhSachAsync(Guid userId)
     {
         return await (from n in db.Needs.AsNoTracking() join s in db.Subjects on n.MonHocId equals s.Id
-                      where n.ChuSoHuuId == userId orderby n.TaoLuc descending
+                      where n.ChuSoHuuId == userId && n.LoaiNhuCau == 0 orderby n.TaoLuc descending
                       select new NeedCard { Id = n.Id, OwnerId = userId, Subject = s.TenMon, Grade = n.KhoiLop,
                           Goal = n.MucTieu, Format = n.HinhThucHoc, Region = n.KhuVuc, Fee = n.HocPhiDuKien,
                           FeeUnit = n.DonViHocPhi, WeeklySessions = n.SoBuoiTuan, State = n.TrangThai,
@@ -59,7 +50,7 @@ public sealed class NhuCauService(AppDbContext db, IConfiguration? configuration
 
     public async Task<NeedCard?> LayChiTietAsync(Guid id)
     {
-        var result = await Catalog(false).SingleOrDefaultAsync(x => x.Id == id && x.State == NeedState.Open);
+        var result = await Catalog().SingleOrDefaultAsync(x => x.Id == id && x.State == NeedState.Open);
         if (result != null) result.Slots = await db.Availability.AsNoTracking().Where(x => x.NhuCauId == id).OrderBy(x => x.ThuTrongTuan).ToListAsync();
         return result;
     }
@@ -70,6 +61,8 @@ public sealed class NhuCauService(AppDbContext db, IConfiguration? configuration
 
     public async Task CapNhatAsync(Guid owner, WorkspaceViewModel workspace, NeedForm form)
     {
+        if(workspace.IsTutor || await (from ur in db.UserRoles join r in db.Roles on ur.RoleId equals r.Id where ur.UserId==owner&&r.Name=="GiaSu" select ur).AnyAsync())
+            throw new InvalidOperationException("Gia sư cập nhật hồ sơ và điều kiện nhận lớp, không đăng nhu cầu dạy.");
         if (!workspace.CanPublish) throw new InvalidOperationException("Hồ sơ gia sư phải được duyệt trước khi tạo hoặc sửa nhu cầu nhận lớp.");
         await using var transaction = await db.Database.BeginTransactionAsync();
         await EnsureActiveAsync(owner);

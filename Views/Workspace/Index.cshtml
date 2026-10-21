@@ -6,6 +6,7 @@
     <small>Bộ lọc và so sánh chi tiết có trong trang tìm kiếm.</small></div><div class="banner-aside"><img src="~/images/ui/mortarboard.svg" alt="" width="60" height="60" /><strong>Học tập có mục tiêu</strong><span>Kết nối · Đồng hành · Tiến bộ</span></div></section>
 @if (Model.IsTutor && !Model.CanPublish)
 { <partial name="_ApprovalNotice" model="Model" /> }
+@if(Model.IsTutor){<section class="section-space surface profile-section"><h2>Hồ sơ gia sư của bạn</h2><p>Hoàn thiện chuyên môn, bổ sung minh chứng và thiết lập điều kiện nhận lớp để người học tìm thấy bạn.</p><a class="btn btn-pink" asp-controller="HoSoGiaSu" asp-action="Sua">Hồ sơ chuyên môn</a><a class="btn btn-outline-pink ms-2" asp-controller="HoSoGiaSu" asp-action="DieuKien">Điều kiện nhận lớp</a></section>}else{
 <section class="section-space"><div class="section-heading"><div><p class="overline">DÀNH RIÊNG CHO BẠN</p><h2>Đề xuất phù hợp với nhu cầu</h2></div><a asp-controller="NhuCau" asp-action="Index">Quản lý nhu cầu <span aria-hidden="true">→</span></a></div>
 @if (Model.Cards.Any(x => x.CompatibilityPercent.HasValue))
 { <div class="row g-4">@foreach(var card in Model.Cards.Where(x=>x.CompatibilityPercent.HasValue).OrderByDescending(x=>x.CompatibilityPercent)){<div class="col-md-6 col-xl-4"><partial name="_NeedCard" model="card" /></div>}</div> }
@@ -14,6 +15,8 @@ else if (!Model.MyNeeds.Any(x => x.TrangThai == KetNoiGiaSu.Models.NeedState.Ope
 else
 { <div class="surface p-4"><label for="matching-need" class="form-label">Nhu cầu đang mở của bạn</label><select id="matching-need" class="form-select mb-3">@foreach (var need in Model.MyNeeds.Where(x => x.TrangThai == KetNoiGiaSu.Models.NeedState.Open)) { <option value="@need.Id">@Model.Subjects.FirstOrDefault(x => x.Id == need.MonHocId)?.TenMon · @need.KhoiLop</option> }</select><h3 class="fs-6">Chưa có kết quả xét độ phù hợp</h3><p class="text-muted">Tỷ lệ phù hợp sẽ xuất hiện khi dữ liệu và bộ tiêu chí được tính đầy đủ. Bạn vẫn có thể tìm kiếm và so sánh các nhu cầu đang mở.</p><a class="btn btn-pink" asp-controller="TimKiem" asp-action="Tim">@(Model.IsTutor ? "Tìm nhu cầu học" : "Tìm kiếm gia sư")</a></div> }
 </section>
+}
+
 <section class="section-space"><div class="section-heading"><div><p class="overline">KHÔNG CHỈ LÀ MỘT KẾT NỐI</p><h2>Đồng hành trong cả quá trình học</h2></div></div><div class="row g-3">
 @foreach (var benefit in new[] { ("search", "Tìm đúng người đồng hành", "Chủ động xem hồ sơ, đối chiếu môn học và điều kiện trước khi kết nối."), ("calendar3", "Học tập theo kế hoạch", "Thống nhất lịch học, mục tiêu và kỳ vọng cùng gia sư."), ("graph-up-arrow", "Theo dõi từng bước tiến", "Tập trung lịch học, bài tập và phản hồi trong cùng một không gian.") })
 { <div class="col-md-4"><article class="benefit-card h-100"><span class="feature-icon"><img src="~/images/ui/@(benefit.Item1).svg" width="24" height="24" alt="" /></span><h3>@benefit.Item2</h3><p>@benefit.Item3</p></article></div> }

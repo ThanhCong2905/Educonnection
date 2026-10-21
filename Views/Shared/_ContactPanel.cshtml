@@ -1,0 +1,35 @@
+@model KetNoiGiaSu.ViewModels.ContactPanelViewModel
+@using KetNoiGiaSu.Models
+@{ var accepted=Model.Contact?.TrangThai==ContactState.Accepted; var pending=Model.Contact?.TrangThai==ContactState.Pending; }
+@if(!Model.CanInteract) {
+    <div class="alert alert-warning">Bạn cần hoàn thiện hồ sơ chuyên môn, minh chứng và điều kiện nhận lớp, rồi được duyệt trước khi liên hệ.</div>
+    <a class="btn btn-pink mb-3" asp-controller="HoSoGiaSu" asp-action="Sua">Hoàn thiện hồ sơ gia sư</a>
+}
+else if(pending) {
+    <div class="private-note mb-3"><strong>@(Model.Contact!.NguoiGuiId==Model.Owner?"Đang chờ chấp nhận liên hệ":"Bạn có yêu cầu liên hệ")</strong><p class="preserve-lines mb-0">@Model.Contact.LoiNhan</p></div>
+    <form asp-controller="LienHe" asp-action="PhanHoi" method="post" class="mb-3 d-flex flex-wrap gap-2">
+        <input type="hidden" name="id" value="@Model.Contact.Id" /><input type="hidden" name="version" value="@Convert.ToBase64String(Model.Contact.RowVersion)" />
+        @if(Model.Contact.NguoiGuiId==Model.Owner) {<button class="btn btn-light" name="decision" value="withdraw">Rút yêu cầu liên hệ</button>}
+        else {<button class="btn btn-pink" name="decision" value="accept">Chấp nhận liên hệ</button><button class="btn btn-light" name="decision" value="reject">Từ chối</button>}
+    </form>
+}
+else if(!accepted) {
+    <form asp-controller="LienHe" asp-action="Gui" method="post" class="mb-4" data-contact-request>
+        <input type="hidden" name="Target" value="@Model.Target" />
+        <label for="contact-note-@Model.Target" class="form-label">Lời nhắn liên hệ *</label>
+        <textarea id="contact-note-@Model.Target" name="Note" class="form-control" rows="4" required maxlength="2000" placeholder="Giới thiệu mục tiêu và nội dung muốn trao đổi…"></textarea>
+        <button class="btn btn-pink w-100 mt-3" type="submit">Gửi yêu cầu liên hệ</button>
+    </form>
+}
+@if(!accepted) {<p class="private-note" id="contact-gate-@Model.Target">Hai bên phải chấp nhận yêu cầu liên hệ trước khi nhắn tin hoặc gửi yêu cầu kết nối lớp.</p>}
+else {<p class="tag approved">Đã chấp nhận liên hệ</p>}
+<div class="@(!accepted?"contact-locked":"")">
+<form asp-controller="KetNoi" asp-action="GuiYeuCau" method="post">
+    <fieldset disabled="@(!accepted||!Model.CanInteract)" aria-describedby="@(!accepted?"contact-gate-"+Model.Target:null)">
+    <input type="hidden" name="Target" value="@Model.Target" /><input type="hidden" name="NeedId" value="@Model.NeedId" />
+    <label for="connection-note-@Model.Target" class="form-label">Lời nhắn kết nối lớp *</label>
+    <textarea id="connection-note-@Model.Target" name="Note" class="form-control" rows="3" required maxlength="2000" placeholder="Đề nghị bắt đầu trao đổi để thống nhất lớp học"></textarea>
+    <button class="btn btn-pink w-100 mt-3" type="submit">Gửi yêu cầu kết nối</button></fieldset>
+</form>
+<form asp-controller="TinNhan" asp-action="MoHoiThoai" method="post" class="mt-2"><input type="hidden" name="target" value="@Model.Target" /><button class="btn btn-outline-pink w-100" disabled="@(!accepted||!Model.CanInteract)" type="submit">Nhắn tin</button></form>
+</div>

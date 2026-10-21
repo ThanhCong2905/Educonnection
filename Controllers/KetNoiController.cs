@@ -11,7 +11,7 @@ namespace KetNoiGiaSu.Controllers;
 [Authorize(Roles = "HocSinh,PhuHuynh,GiaSu")]
 [AutoValidateAntiforgeryToken]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class KetNoiController(KetNoiService communication, WorkspaceService workspaceService) : WorkspaceBaseController(workspaceService)
+public sealed class KetNoiController(KetNoiService communication, WorkspaceService workspaceService, LienHeService contacts) : WorkspaceBaseController(workspaceService)
 {
     [HttpPost("/KetNoi/ChapNhan")]
     public Task<IActionResult> ChapNhan(Guid id, string version) => PhanHoi(id, "accept", version);
@@ -26,7 +26,7 @@ public sealed class KetNoiController(KetNoiService communication, WorkspaceServi
     [Route("/Workspace/Connections")]
     public async Task<IActionResult> DanhSach() {
         var workspace=await Workspace();ViewData["Workspace"]=workspace;
-        return View("~/Views/KetNoi/DanhSach.cshtml", new ConnectionsViewModel {Workspace=workspace,Items=await communication.LayDanhSachAsync(UserId)});
+        return View("~/Views/KetNoi/DanhSach.cshtml", new ConnectionsViewModel {Workspace=workspace,Items=await communication.LayDanhSachAsync(UserId),Contacts=await contacts.LayDanhSachAsync(UserId)});
     }
 
     [Route("/KetNoi/GuiYeuCau")]

@@ -29,7 +29,13 @@ public sealed class CommunicationTests(WorkspaceDatabase fixture) : IClassFixtur
     private static async Task<(Guid Tutor,Guid Learner)> Pair(AppDbContext db) {
         var tutor=await User(db,"GiaSu");var learner=await User(db,"PhuHuynh");
         var profile=new TutorProfile {Id=Guid.NewGuid(),GiaSuId=tutor,TrinhDo="Cử nhân",ChuyenMon="Toán",KinhNghiem="Giảng dạy",MoTa="Giới thiệu",KhuVuc="Thành phố",TaoLuc=DateTimeOffset.UtcNow};
-        db.TutorProfiles.Add(profile);await db.SaveChangesAsync();db.ProfileAttachments.Add(new(){Id=Guid.NewGuid(),NguoiTaiLenId=tutor,HoSoGiaSuId=profile.Id,TenGoc="bang-cap.pdf",TenLuuTru=Guid.NewGuid().ToString("N"),LoaiNoiDung="application/pdf",KichThuoc=10,Checksum=new string('a',64),TaoLuc=DateTimeOffset.UtcNow});await db.SaveChangesAsync();return(tutor,learner);
+        db.TutorProfiles.Add(profile);await db.SaveChangesAsync();
+        var reviewer=await User(db,"QuanTriVien");
+        await TutorTestData.Complete(db,profile,await db.Subjects.Select(x=>x.Id).FirstAsync(),reviewer);
+        var contacts=new LienHeService(db,Quyen(db));var contactId=await contacts.GuiAsync(learner,new(){Target=tutor,Note="Xin liên hệ"});
+        var contact=await db.ContactRequests.SingleAsync(x=>x.Id==contactId);
+        await contacts.PhanHoiAsync(tutor,contactId,"accept",Convert.ToBase64String(contact.RowVersion));
+        return(tutor,learner);
     }
     private ClassProposalForm Proposal(ConnectionRequest r) => new(){Id=r.Id,Version=Convert.ToBase64String(r.RowVersion),Name="Lớp Toán",SubjectId=fixture.SubjectId,Goal="Củng cố kiến thức",Schedule="Thứ 2, 18:00; bắt đầu tuần tới",Duration=90,Sessions=2,Fee=200000,FeeUnit=1};
     [Fact]
@@ -58,11 +64,12 @@ public sealed class CommunicationTests(WorkspaceDatabase fixture) : IClassFixtur
         await Assert.ThrowsAsync<InvalidOperationException>(()=>service.GuiAsync(stranger,new(){ConversationId=chat,OperationId=Guid.NewGuid(),Text="Xâm nhập"}));
     }
     [Fact]
-    public async Task ApprovalBypassIsDevelopmentOnly() {
+    public async Task ApprovalCannotBeBypassedEvenInDevelopment() {
         await using var db=fixture.Open();var pair=await Pair(db);
+        var profile=await db.TutorProfiles.SingleAsync(x=>x.GiaSuId==pair.Tutor);profile.TrangThaiDuyet=ProfileReviewState.Pending;profile.NguoiDuyetId=null;profile.DuyetLuc=null;await db.SaveChangesAsync();
         await Assert.ThrowsAsync<InvalidOperationException>(()=>new TinNhanService(db,Quyen(db,false)).MoHoiThoaiAsync(pair.Tutor,pair.Learner));
         await Assert.ThrowsAsync<InvalidOperationException>(()=>new KetNoiService(db,Quyen(db,true,"Production")).GuiYeuCauAsync(pair.Learner,new(){Target=pair.Tutor,Note="Thử"}));
-        Assert.NotEqual(Guid.Empty,await new TinNhanService(db,Quyen(db)).MoHoiThoaiAsync(pair.Tutor,pair.Learner));
+        await Assert.ThrowsAsync<InvalidOperationException>(()=>new TinNhanService(db,Quyen(db)).MoHoiThoaiAsync(pair.Tutor,pair.Learner));
     }
     [Fact]
     public async Task ExpiredRequestsCannotBeAcceptedAndCanBeSentAgain() {

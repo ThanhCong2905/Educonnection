@@ -19,9 +19,10 @@ public sealed class KetNoiService(AppDbContext db, QuyenTuongTacService quyen)
         if(string.IsNullOrWhiteSpace(form.Note) || form.Note.Length>2000) throw new InvalidOperationException("Lời nhắn phải có từ 1 đến 2000 ký tự.");
         await XuLyHetHanYeuCauAsync(); await using var transaction=await db.Database.BeginTransactionAsync();
         var pair=await quyen.PairAsync(actor,form.Target); await quyen.LockAsync($"connection:{pair.Tutor}:{pair.Learner}");
+        await quyen.RequireAcceptedContactAsync(pair.Tutor,pair.Learner);
         if(form.NeedId.HasValue) {
             var need=await db.Needs.AsNoTracking().SingleOrDefaultAsync(x=>x.Id==form.NeedId && x.TrangThai==NeedState.Open);
-            if(need==null || (need.ChuSoHuuId!=pair.Tutor && need.ChuSoHuuId!=pair.Learner) || (need.ChuSoHuuId==pair.Tutor && need.LoaiNhuCau!=1) || (need.ChuSoHuuId==pair.Learner && need.LoaiNhuCau!=0))
+            if(need==null || need.ChuSoHuuId!=pair.Learner || need.LoaiNhuCau!=0)
                 throw new InvalidOperationException("Nhu cầu không thuộc hai bên hoặc không còn mở.");
         }
         var existing=await db.ConnectionRequests.SingleOrDefaultAsync(x=>x.GiaSuId==pair.Tutor && x.BenHocId==pair.Learner && x.NhuCauId==form.NeedId && (x.TrangThai==ConnectionState.Requested || x.TrangThai==ConnectionState.Proposed));
@@ -50,6 +51,7 @@ public sealed class KetNoiService(AppDbContext db, QuyenTuongTacService quyen)
         await XuLyHetHanYeuCauAsync();await using var transaction=await db.Database.BeginTransactionAsync();
         var request=await db.ConnectionRequests.SingleOrDefaultAsync(x=>x.Id==form.Id && x.GiaSuId==actor) ?? throw new InvalidOperationException("Chỉ gia sư của yêu cầu được đề xuất lớp.");
         await quyen.PairAsync(actor,request.BenHocId);await quyen.LockAsync($"request:{request.Id}");await db.Entry(request).ReloadAsync();CheckVersion(request,form.Version);
+        await quyen.RequireAcceptedContactAsync(request.GiaSuId,request.BenHocId);
         if(request.TrangThai is not (ConnectionState.Requested or ConnectionState.Proposed) || request.HetHanLuc<=DateTimeOffset.UtcNow) throw new InvalidOperationException("Yêu cầu không còn chờ phản hồi.");
         if(!await db.Subjects.AnyAsync(x=>x.Id==form.SubjectId && x.DangSuDung)) throw new InvalidOperationException("Môn học không khả dụng.");
         request.TenLopDuKien=form.Name.Trim();request.MonHocId=form.SubjectId;request.MucTieu=form.Goal.Trim();request.SoBuoiTuan=form.Sessions;request.ThoiLuongPhut=form.Duration;
@@ -63,6 +65,7 @@ public sealed class KetNoiService(AppDbContext db, QuyenTuongTacService quyen)
         await XuLyHetHanYeuCauAsync();await using var transaction=await db.Database.BeginTransactionAsync();
         var request=await db.ConnectionRequests.SingleOrDefaultAsync(x=>x.Id==id && (x.GiaSuId==actor || x.BenHocId==actor)) ?? throw new InvalidOperationException("Không tìm thấy yêu cầu của bạn.");
         await quyen.PairAsync(actor,request.GiaSuId==actor?request.BenHocId:request.GiaSuId);await quyen.LockAsync($"request:{id}");await db.Entry(request).ReloadAsync();CheckVersion(request,version);
+        await quyen.RequireAcceptedContactAsync(request.GiaSuId,request.BenHocId);
         if(request.TrangThai is not (ConnectionState.Requested or ConnectionState.Proposed) || request.HetHanLuc<=DateTimeOffset.UtcNow) throw new InvalidOperationException("Yêu cầu đã được xử lý hoặc hết hạn.");
         if(action=="accept") {
             if(actor!=request.BenHocId || request.TrangThai!=ConnectionState.Proposed || request.MonHocId==null || request.HocPhi==null) throw new InvalidOperationException("Chỉ bên học được xác nhận đề xuất lớp của gia sư.");

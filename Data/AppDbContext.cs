@@ -22,10 +22,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<ConnectedClass> ConnectedClasses => Set<ConnectedClass>();
+    public DbSet<TutorConditions> TutorConditions => Set<TutorConditions>();
+    public DbSet<TutorAvailability> TutorAvailability => Set<TutorAvailability>();
+    public DbSet<TutorProfileRevision> TutorProfileRevisions => Set<TutorProfileRevision>();
+    public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<TutorConditions>(e => { e.ToTable("DieuKienNhanLopGiaSu"); e.HasKey(x => x.HoSoGiaSuId); e.Property(x => x.RowVersion).IsRowVersion(); e.Property(x => x.HocPhi).HasPrecision(18,0); });
+        builder.Entity<TutorAvailability>().ToTable("KhungGioRanhGiaSu");
+        builder.Entity<TutorProfileRevision>(e => { e.ToTable("YeuCauCapNhatHoSoGiaSu"); e.Property(x => x.RowVersion).IsRowVersion(); });
+        builder.Entity<ContactRequest>(e => { e.ToTable("YeuCauLienHe"); e.Property(x => x.RowVersion).IsRowVersion(); e.HasIndex(x => new { x.GiaSuId, x.BenHocId }).IsUnique(); });
         builder.Entity<ConnectionRequest>(e => { e.ToTable("YeuCauKetNoiLopHoc"); e.Property(x => x.RowVersion).IsRowVersion(); e.Property(x => x.HocPhi).HasPrecision(18,0); });
         builder.Entity<Conversation>().ToTable("CuocHoiThoai");
         builder.Entity<ChatMessage>().ToTable("TinNhan");

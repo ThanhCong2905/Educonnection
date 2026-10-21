@@ -11,7 +11,7 @@ namespace KetNoiGiaSu.Controllers;
 [Authorize(Roles = "HocSinh,PhuHuynh,GiaSu")]
 [AutoValidateAntiforgeryToken]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class NhuCauController(NhuCauService service, WorkspaceService workspaceService, ProfileDataService profileData) : WorkspaceBaseController(workspaceService)
+public sealed class NhuCauController(NhuCauService service, WorkspaceService workspaceService, ProfileDataService profileData, KetNoiGiaSu.Data.AppDbContext db) : WorkspaceBaseController(workspaceService)
 {
     [HttpPost("/NhuCau/TaoNhuCauHoc")]
     [Authorize(Roles = "HocSinh,PhuHuynh")]
@@ -25,14 +25,14 @@ public sealed class NhuCauController(NhuCauService service, WorkspaceService wor
     [Authorize(Roles = "GiaSu")]
     public Task<IActionResult> TaoNhuCauNhanLop([Bind(Prefix="Form")] NeedForm form)
     {
-        if (form.Id.HasValue) return Task.FromResult<IActionResult>(BadRequest());
-        return CapNhat(form);
+        return Task.FromResult<IActionResult>(StatusCode(410,"Nhu cầu dạy đã được thay bằng hồ sơ gia sư."));
     }
 
     [Route("/NhuCau/Index")]
     [Route("/Workspace/Needs")]
     public async Task<IActionResult> Index(string? state)
     {
+        if(User.IsInRole("GiaSu"))return RedirectToAction("DieuKien","HoSoGiaSu");
         var model = await Workspace(); model.Title = model.IsTutor ? "Nhu cầu dạy" : "Nhu cầu học";
         model.Cards = await service.LayDanhSachAsync(UserId);
         foreach (var card in model.Cards) card.OwnerName = User.Identity?.Name ?? "";
@@ -48,6 +48,7 @@ public sealed class NhuCauController(NhuCauService service, WorkspaceService wor
         if (!workspace.IsTutor) return Forbid();
         var card = await service.LayChiTietAsync(id);
         if (card == null) return NotFound();
+        card.Contact=await db.ContactRequests.AsNoTracking().SingleOrDefaultAsync(x=>x.GiaSuId==UserId&&x.BenHocId==card.OwnerId);
         ViewData["Workspace"] = workspace; return View("~/Views/NhuCau/ChiTiet.cshtml", card);
     }
 
@@ -56,6 +57,7 @@ public sealed class NhuCauController(NhuCauService service, WorkspaceService wor
     [HttpGet]
     public async Task<IActionResult> Sua(Guid? id)
     {
+        if(User.IsInRole("GiaSu"))return RedirectToAction("DieuKien","HoSoGiaSu");
         var workspace = await Workspace(); ViewData["Workspace"] = workspace;
         if (!workspace.IsProfileComplete) return View("ProfileRequired", workspace);
         if (!workspace.CanPublish) return View("ApprovalRequired", workspace);
@@ -83,6 +85,7 @@ public sealed class NhuCauController(NhuCauService service, WorkspaceService wor
     [HttpPost]
     public async Task<IActionResult> CapNhat([Bind(Prefix="Form")] NeedForm form)
     {
+        if(User.IsInRole("GiaSu"))return Forbid();
         var workspace = await Workspace(); ViewData["Workspace"] = workspace;
         if (!workspace.IsProfileComplete) { Response.StatusCode = 403; return View("ProfileRequired", workspace); }
         if (!workspace.CanPublish) { Response.StatusCode = 403; return View("ApprovalRequired", workspace); }
@@ -112,6 +115,7 @@ public sealed class NhuCauController(NhuCauService service, WorkspaceService wor
     [HttpPost]
     public async Task<IActionResult> Dong(Guid id)
     {
+        if(User.IsInRole("GiaSu"))return Forbid();
         await service.DongNhuCauAsync(id, UserId); TempData["Success"] = "Đã đóng nhu cầu. Dữ liệu được giữ lại trong danh sách của bạn."; return RedirectToAction("Index", "NhuCau");
     }
 

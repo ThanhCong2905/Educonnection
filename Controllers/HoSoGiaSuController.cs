@@ -11,8 +11,25 @@ namespace KetNoiGiaSu.Controllers;
 [Authorize(Roles = "HocSinh,PhuHuynh,GiaSu")]
 [AutoValidateAntiforgeryToken]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class HoSoGiaSuController(HoSoGiaSuService service, WorkspaceService workspaceService, ProfileDataService profileData) : WorkspaceBaseController(workspaceService)
+public sealed class HoSoGiaSuController(HoSoGiaSuService service, WorkspaceService workspaceService, DieuKienNhanLopService conditions) : WorkspaceBaseController(workspaceService)
 {
+    [HttpGet("/HoSoGiaSu/DieuKien"),Authorize(Roles="GiaSu")]
+    public async Task<IActionResult> DieuKien()
+    {
+        var workspace=await Workspace();ViewData["Workspace"]=workspace;
+        if(workspace.MyProfile==null)return RedirectToAction(nameof(Sua));
+        return View(new TutorConditionsEditor {Workspace=workspace,Form=await conditions.LayDeSuaAsync(UserId)});
+    }
+
+    [HttpPost("/HoSoGiaSu/DieuKien"),Authorize(Roles="GiaSu")]
+    public async Task<IActionResult> DieuKien([Bind(Prefix="Form")] TutorConditionsForm form)
+    {
+        var workspace=await Workspace();ViewData["Workspace"]=workspace;
+        if(workspace.MyProfile==null)return RedirectToAction(nameof(Sua));
+        if(ModelState.IsValid)try {await conditions.CapNhatAsync(UserId,form);TempData["Success"]="Đã lưu điều kiện nhận lớp. Thay đổi có hiệu lực ngay, không cần duyệt lại chuyên môn.";return RedirectToAction(nameof(ChiTiet));}
+        catch(Exception ex)when(ex is InvalidOperationException or DbUpdateConcurrencyException) {ModelState.AddModelError("",ex is DbUpdateConcurrencyException?"Dữ liệu đã thay đổi. Vui lòng tải lại trang.":ex.Message);}
+        return View(new TutorConditionsEditor {Workspace=workspace,Form=form});
+    }
 
     [Route("/HoSoGiaSu/ChiTiet")]
     [Route("/Workspace/Profile/{id?}")]
@@ -33,15 +50,13 @@ public sealed class HoSoGiaSuController(HoSoGiaSuService service, WorkspaceServi
     {
         var workspace = await Workspace(); ViewData["Workspace"] = workspace;
         var form = await service.LayDeSuaAsync(workspace);
-        var address = await profileData.AddressAsync(UserId);
-        if (address != null) form.Region = address.PublicRegion;
-        return View("~/Views/HoSoGiaSu/Sua.cshtml", new ProfileEditorViewModel { Workspace = workspace, Form = form });
+        return View("~/Views/HoSoGiaSu/Sua.cshtml", new ProfileEditorViewModel { Workspace = workspace, Form = form, HasPendingRevision=!string.IsNullOrEmpty(form.RevisionVersion) });
     }
 
     [Route("/HoSoGiaSu/Luu")]
     [Route("/HoSoGiaSu/Sua")]
     [Route("/Workspace/EditProfile/{id?}")]
-    [HttpPost, Authorize(Roles="GiaSu")]
+    [HttpPost, Authorize(Roles="GiaSu"), RequestSizeLimit(3000000)]
     public async Task<IActionResult> Luu([Bind(Prefix="Form")] TutorProfileForm form)
     {
         var workspace = await Workspace(); ViewData["Workspace"] = workspace;
@@ -52,7 +67,8 @@ public sealed class HoSoGiaSuController(HoSoGiaSuService service, WorkspaceServi
             catch (InvalidOperationException ex) { ModelState.AddModelError("", ex.Message); }
             catch (DbUpdateConcurrencyException) { ModelState.AddModelError("", "Hồ sơ vừa thay đổi. Vui lòng tải lại trang."); }
         }
-        return View("~/Views/HoSoGiaSu/Sua.cshtml", new ProfileEditorViewModel { Workspace = workspace, Form = form });
+        form.CurrentAvatar=(await service.LayDeSuaAsync(workspace)).CurrentAvatar;
+        return View("~/Views/HoSoGiaSu/Sua.cshtml", new ProfileEditorViewModel { Workspace = workspace, Form = form, HasPendingRevision=!string.IsNullOrEmpty(form.RevisionVersion) });
     }
 
 }

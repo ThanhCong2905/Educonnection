@@ -7,7 +7,7 @@
     var role = workspace.IsTutor ? "Gia sư" : workspace.IsParent ? "Phụ huynh" : "Học sinh";
     var initial = User.Identity?.Name?.Split(' ', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()?[..1] ?? "E";
     var routes = new[] { ("Index", "", "house-door", "Trang chủ", "Workspace"), ("Tim", "", "search", workspace.IsTutor ? "Tìm kiếm học sinh" : "Tìm kiếm gia sư", "TimKiem"),
-        ("Index", "", "journal-text", workspace.IsTutor ? "Nhu cầu dạy" : "Nhu cầu học", "NhuCau"), ("DanhSach", "", "link-45deg", "Kết nối", "KetNoi"),
+        (workspace.IsTutor ? "DieuKien" : "Index", "", "journal-text", workspace.IsTutor ? "Điều kiện nhận lớp" : "Nhu cầu học", workspace.IsTutor ? "HoSoGiaSu" : "NhuCau"), ("DanhSach", "", "link-45deg", "Liên hệ & kết nối", "KetNoi"),
         ("DanhSach", "", "collection", "Lớp học", "LopHoc"), ("DanhSachHoiThoai", "", "chat-dots", "Tin nhắn", "TinNhan"), ("Section", "notifications", "bell", "Thông báo", "Workspace") };
 }
 <!DOCTYPE html>

@@ -18,12 +18,13 @@ public sealed class WorkspaceService(AppDbContext db, IConfiguration? configurat
     {
         return new WorkspaceViewModel
         {
-            IsTutor = tutor, IsParent = parent, ApprovalBypassed = BypassApproval,
+            UserId=userId, IsTutor = tutor, IsParent = parent, ApprovalBypassed = false,
             HasRequiredAddress = await db.PersonalProfiles.AnyAsync(x => x.TaiKhoanId == userId && x.ThanhPho.Trim() != "" && x.DiaChiChiTiet != null && x.DiaChiChiTiet.Trim() != ""),
             HasQualificationFile = tutor && await db.ProfileAttachments.AnyAsync(x => x.NguoiTaiLenId == userId && x.HoSoGiaSuId != null),
+            HasTutorConditions = tutor && await (from p in db.TutorProfiles join c in db.TutorConditions on p.Id equals c.HoSoGiaSuId where p.GiaSuId==userId select c).AnyAsync(),
             MyProfile = tutor ? await db.TutorProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.GiaSuId == userId) : null,
             Subjects = await db.Subjects.AsNoTracking().Where(x => x.DangSuDung).OrderBy(x => x.TenMon).ToListAsync(),
-            MyNeeds = await db.Needs.AsNoTracking().Where(x => x.ChuSoHuuId == userId).OrderByDescending(x => x.TaoLuc).ToListAsync()
+            MyNeeds = tutor ? [] : await db.Needs.AsNoTracking().Where(x => x.ChuSoHuuId == userId&&x.LoaiNhuCau==0).OrderByDescending(x => x.TaoLuc).ToListAsync()
         };
     }
 

@@ -6,6 +6,7 @@ obj/
 .data-protection-keys/
 .maildrop/
 .private-uploads/
+wwwroot/images/tutors/
 tmp/
 artifacts/
 node_modules/

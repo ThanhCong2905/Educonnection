@@ -2,7 +2,8 @@
 @using KetNoiGiaSu.Models
 @{ ViewData["Title"]="Kết nối"; var actor=Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value); }
 <div class="page-heading"><div><p class="overline">CÙNG NHAU BẮT ĐẦU</p><h1>Kết nối của bạn</h1><p>Trao đổi nhu cầu, thống nhất điều kiện và xác nhận lớp học. Lời mời và đề xuất có hiệu lực trong 72 giờ.</p></div><a class="btn btn-outline-pink" asp-controller="TimKiem" asp-action="Tim">Tìm kiếm kết nối</a></div>
-@if(Model.Items.Count==0) {<section class="empty-state surface"><h2>Chưa có yêu cầu kết nối</h2><p>Chọn người phù hợp trong tìm kiếm và gửi lời nhắn giới thiệu.</p></section>}
+<partial name="_ContactList" model="Model" />
+@if(Model.Items.Count==0) {<section class="empty-state surface"><h2>Chưa có yêu cầu kết nối lớp</h2><p>Gửi yêu cầu liên hệ trước. Khi người nhận chấp nhận, hai bên có thể nhắn tin và kết nối lớp.</p></section>}
 <div class="connection-list">
 @foreach(var item in Model.Items) {
  var r=item.Request;var pending=r.TrangThai is ConnectionState.Requested or ConnectionState.Proposed;

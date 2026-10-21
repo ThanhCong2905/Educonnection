@@ -1,29 +1,26 @@
 @model KetNoiGiaSu.ViewModels.ProfileDetailViewModel
-@using System.Globalization
-@{ ViewData["Title"] = "Hồ sơ " + Model.Name; var profile = Model.Profile; var own = Model.Workspace.MyProfile?.Id == profile.Id; }
-@if (own) { @await Component.InvokeAsync("ProfileExtras") }
-<div class="breadcrumbs"><a asp-controller="Workspace" asp-action="Index">Trang chủ</a><span>/</span><a asp-controller="TimKiem" asp-action="Tim">Tìm kiếm gia sư</a><span>/</span>@Model.Name</div>
-<div class="row g-4"><div class="col-xl-8">
-<section class="profile-hero"><span class="profile-avatar">@Model.Name.Split(' ',StringSplitOptions.RemoveEmptyEntries).LastOrDefault()?[..1]</span><div><span class="tag @(profile.TrangThaiDuyet == KetNoiGiaSu.Models.ProfileReviewState.Approved ? "approved" : "")">@(profile.TrangThaiDuyet == KetNoiGiaSu.Models.ProfileReviewState.Approved ? "Hồ sơ đã duyệt" : profile.TrangThaiDuyet == KetNoiGiaSu.Models.ProfileReviewState.Pending ? "Đang chờ xét duyệt" : "Cần bổ sung hồ sơ")</span><h1>@Model.Name</h1><p>@profile.TrinhDo</p><p class="text-muted">@profile.KhuVuc</p><div class="profile-price">@profile.HocPhiCongKhai.ToString("N0",CultureInfo.GetCultureInfo("vi-VN"))đ <small>/ @(profile.DonViHocPhi == 0 ? "giờ" : profile.DonViHocPhi == 1 ? "buổi" : "tháng")</small></div></div></section>
-<nav class="nav profile-tabs" role="tablist"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#introduction" type="button" role="tab" aria-controls="introduction" aria-selected="true">Giới thiệu</button><button class="nav-link" data-bs-toggle="tab" data-bs-target="#qualifications" type="button" role="tab" aria-controls="qualifications" aria-selected="false">Chuyên môn & trình độ</button><button class="nav-link" data-bs-toggle="tab" data-bs-target="#teaching-needs" type="button" role="tab" aria-controls="teaching-needs" aria-selected="false">Nhu cầu nhận lớp (@Model.Needs.Count)</button></nav>
-<div class="tab-content"><section class="tab-pane fade show active surface profile-section" id="introduction" role="tabpanel"><h2>Giới thiệu bản thân</h2><p class="preserve-lines">@profile.MoTa</p><div class="profile-note"><h3>Kinh nghiệm giảng dạy</h3><p class="preserve-lines">@profile.KinhNghiem</p></div></section><section class="tab-pane fade surface profile-section" id="qualifications" role="tabpanel"><h2>Chuyên môn & trình độ</h2><h3>Trình độ</h3><p>@profile.TrinhDo</p><h3>Chuyên môn</h3><p class="preserve-lines">@profile.ChuyenMon</p><h3>Môn nhận dạy</h3><div class="d-flex flex-wrap gap-2">@foreach(var subject in Model.Subjects){<span class="tag">@subject</span>}</div><div class="private-note mt-4">Hồ sơ được xét duyệt bởi quản trị viên. Giấy tờ và tài liệu xác minh riêng tư không hiển thị công khai.</div></section><section class="tab-pane fade" id="teaching-needs" role="tabpanel">@if(Model.Needs.Count == 0){<div class="empty-state surface"><h2>Chưa có nhu cầu nhận lớp đang mở</h2><p>Gia sư chưa công bố điều kiện nhận lớp vào lúc này.</p></div>}else{<div class="row g-3">@foreach(var need in Model.Needs){<div class="col-md-6"><partial name="_NeedCard" model="need" /></div>}</div>}</section></div>
-</div><aside class="col-xl-4"><div class="surface contact-panel">
-@if (own)
-{
-    <span class="overline">HỒ SƠ CỦA BẠN</span><h2>Thông tin giới thiệu với người học</h2>
-    <p>Giữ hồ sơ rõ ràng và cập nhật điều kiện nhận lớp trong mục Nhu cầu dạy.</p>
-    @if (profile.TrangThaiDuyet != KetNoiGiaSu.Models.ProfileReviewState.Approved && !Model.Workspace.ApprovalBypassed) { <div class="private-note">Hồ sơ chưa được công khai. Bạn cần được duyệt trước khi tạo nhu cầu nhận lớp.</div> }
-    <a class="btn btn-pink w-100 mt-3" asp-controller="HoSoGiaSu" asp-action="Sua">Chỉnh sửa hồ sơ</a>
-    <a class="btn btn-outline-pink w-100 mt-2" asp-controller="Workspace" asp-action="Status">Theo dõi xét duyệt</a>
+@using KetNoiGiaSu.Models
+@using KetNoiGiaSu.ViewModels
+@{ var profile=Model.Profile;var own=Model.Workspace.IsTutor&&Model.Workspace.UserId==profile.GiaSuId;var c=Model.Conditions;ViewData["Title"]="Hồ sơ "+Model.Name; }
+<div class="breadcrumbs"><a asp-controller="TimKiem" asp-action="Tim">Tìm kiếm gia sư</a><span>/</span>Hồ sơ gia sư</div>
+@if(own&&Model.LatestRevision!=null){<div class="alert @(Model.LatestRevision.TrangThai==ProfileReviewState.Rejected?"alert-warning":"alert-info")">@if(Model.LatestRevision.TrangThai==ProfileReviewState.Pending){<span>Bản chuyên môn mới đang chờ duyệt. Bản đã được duyệt trước đó vẫn có hiệu lực.</span>}else if(Model.LatestRevision.TrangThai==ProfileReviewState.Rejected){<span>Bản sửa bị từ chối: @Model.LatestRevision.LyDoTuChoi</span>}else{<span>Hồ sơ chuyên môn đã được duyệt.</span>}</div>}
+<div class="row g-4"><div class="col-xl-8"><section class="surface profile-section">
+<div class="d-flex align-items-center gap-3 mb-4">@if(!string.IsNullOrEmpty(profile.AnhDaiDien)){<img src="@profile.AnhDaiDien" class="tutor-avatar" width="88" height="88" alt="Ảnh đại diện @Model.Name" />}<div><h1>@Model.Name</h1><span class="tag @(profile.TrangThaiDuyet==ProfileReviewState.Approved?"approved":"")">@(profile.TrangThaiDuyet==ProfileReviewState.Approved?"Hồ sơ đã duyệt":"Hồ sơ chưa được duyệt")</span></div></div>
+<h2>Giới thiệu</h2><p class="preserve-lines">@profile.MoTa</p>
+<h2 class="mt-4">Trình độ và chuyên môn</h2><dl><dt>Trình độ</dt><dd>@profile.TrinhDo</dd><dt>Trường đào tạo</dt><dd>@profile.TruongDaoTao</dd><dt>Chuyên ngành</dt><dd>@profile.ChuyenNganh</dd><dt>Tình trạng học tập</dt><dd>@(profile.TinhTrangHocTap=="DaTotNghiep"?"Đã tốt nghiệp":"Đang học")</dd></dl>
+<h3 class="fs-5">Môn và phạm vi dạy</h3><div class="d-flex flex-wrap gap-2">@foreach(var subject in Model.Subjects){<span class="tag">@subject</span>}</div>
+<h3 class="fs-5 mt-4">Thế mạnh chuyên môn</h3><p class="preserve-lines">@profile.ChuyenMon</p>
+<h3 class="fs-5 mt-4">Kinh nghiệm</h3><p class="preserve-lines">@profile.KinhNghiem</p><p class="private-note">Giấy tờ minh chứng, email, số điện thoại và địa chỉ chi tiết không được công khai.</p>
+</section><section class="surface profile-section mt-4"><h2>Điều kiện nhận lớp</h2>
+@if(c==null){<p>Chưa cập nhật điều kiện nhận lớp.</p>}else{
+<span class="tag @(c.DangNhanHocVien?"approved":"")">@(c.DangNhanHocVien?"Đang nhận học viên":"Tạm ngừng nhận học viên mới")</span>
+<p class="mt-3">@(c.DayTrucTuyen?"Trực tuyến":"") @(c.DayTrucTuyen&&c.DayTrucTiep?" · ":"") @(c.DayTrucTiep?"Trực tiếp · "+c.KhuVuc:"")</p>
+<p class="profile-price">@(c.HocPhi.HasValue?c.HocPhi.Value.ToString("N0",System.Globalization.CultureInfo.GetCultureInfo("vi-VN"))+"đ":"Thỏa thuận") @if(c.HocPhi.HasValue){<small>/ @(c.DonViHocPhi==0?"giờ":c.DonViHocPhi==1?"buổi":"tháng")</small>}</p>
+<h3 class="fs-5">Lịch rảnh (giờ Việt Nam)</h3><div class="d-flex flex-wrap gap-2">@foreach(var slot in Model.Availability){<span class="tag">@(slot.ThuTrongTuan==0?"Chủ nhật":"Thứ "+(slot.ThuTrongTuan+1)) · @slot.GioBatDau.ToString("HH:mm")–@slot.GioKetThuc.ToString("HH:mm")</span>}</div>
 }
-else
-{
-    <span class="overline">TÌM HIỂU TRƯỚC KHI KẾT NỐI</span><h2>Bạn muốn học cùng @Model.Name.Split(' ').LastOrDefault()?</h2>
-    <p>Trao đổi về mục tiêu, lịch học và học phí trước khi thống nhất lớp dự kiến.</p>
-    @if (!Model.Workspace.IsTutor) {
-    <form asp-controller="KetNoi" asp-action="GuiYeuCau" method="post" class="mt-3"><input type="hidden" name="Target" value="@profile.GiaSuId" /><input type="hidden" name="NeedId" value="@Model.SelectedNeedId" /><label for="connection-note" class="form-label">Bạn muốn trao đổi về điều gì? *</label><textarea id="connection-note" name="Note" class="form-control" rows="4" required maxlength="2000" placeholder="Giới thiệu nhu cầu học, mục tiêu và thời gian mong muốn…"></textarea><p class="form-text">Lời nhắn riêng gửi gia sư; không cần chọn một nhu cầu học khác.</p><button class="btn btn-pink w-100" type="submit">Gửi lời mời kết nối</button></form>
-    <form asp-controller="TinNhan" asp-action="MoHoiThoai" method="post" class="mt-2"><input type="hidden" name="target" value="@profile.GiaSuId" /><button class="btn btn-outline-pink w-100" type="submit">Nhắn tin</button></form>
-    <div class="private-note mt-3">Gửi lời mời chưa tạo lớp. Gia sư sẽ đề xuất điều kiện lớp để bạn xác nhận.</div>
-    } else { <p class="private-note">Kết nối áp dụng giữa gia sư và học sinh/phụ huynh.</p> }
-}
-</div></aside></div>
+</section></div><aside class="col-xl-4"><section class="surface contact-panel">
+@if(own){<h2>Quản lý hồ sơ gia sư</h2><p>Chuyên môn được duyệt riêng. Điều kiện nhận lớp có thể cập nhật bất cứ lúc nào.</p><a class="btn btn-pink w-100 mt-2" asp-action="Sua">Sửa hồ sơ chuyên môn</a><a class="btn btn-outline-pink w-100 mt-2" asp-action="DieuKien">Sửa điều kiện nhận lớp</a><a class="btn btn-link w-100 mt-2" asp-controller="Workspace" asp-action="Status">Theo dõi xét duyệt</a>}
+else if(!Model.Workspace.IsTutor){<h2>Liên hệ cùng gia sư</h2><p>Gửi lời nhắn giới thiệu để gia sư chấp nhận liên hệ trước khi trao đổi.</p><partial name="_ContactPanel" model="@(new ContactPanelViewModel {Owner=Model.Workspace.UserId,Target=profile.GiaSuId,Contact=Model.Contact})" />}
+else{<p>Kết nối dành cho gia sư với học sinh hoặc phụ huynh.</p>}
+</section></aside></div>
+@if(own){<div class="mt-4">@await Component.InvokeAsync("ProfileExtras")</div>}

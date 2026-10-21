@@ -35,6 +35,10 @@ public sealed class WorkspaceDatabase : IAsyncLifetime
         foreach (var batch in Regex.Split(profileSql,@"^\s*GO\s*$",RegexOptions.Multiline|RegexOptions.IgnoreCase)) {
             if (!string.IsNullOrWhiteSpace(batch)) { await using var command = new SqlCommand(batch,master); await command.ExecuteNonQueryAsync(); }
         }
+        var tutorSql=await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory,"tutor-contact-schema.sql"));
+        foreach(var batch in Regex.Split(tutorSql,@"^\s*GO\s*$",RegexOptions.Multiline|RegexOptions.IgnoreCase)) {
+            if(!string.IsNullOrWhiteSpace(batch)){await using var command=new SqlCommand(batch,db.Database.GetDbConnection() as SqlConnection);await db.Database.OpenConnectionAsync();await command.ExecuteNonQueryAsync();}
+        }
         db.Subjects.Add(subject); await db.SaveChangesAsync(); SubjectId = subject.Id;
     }
     public async Task DisposeAsync()
@@ -67,7 +71,8 @@ public sealed class WorkspaceServiceTests(WorkspaceDatabase fixture) : IClassFix
         var profile=new TutorProfile {Id=Guid.NewGuid(),GiaSuId=tutor,TrinhDo="Cử nhân",ChuyenMon="Toán",KinhNghiem="Giảng dạy",MoTa="Giới thiệu",KhuVuc="Hà Nội",HocPhiCongKhai=200000,DonViHocPhi=1,TaoLuc=DateTimeOffset.UtcNow};
         db.TutorProfiles.Add(profile);
         db.Needs.Add(new LearningNeed {Id=Guid.NewGuid(),ChuSoHuuId=tutor,LoaiNhuCau=1,MonHocId=fixture.SubjectId,KhoiLop="Lớp 9",MucTieu=marker,HocPhiDuKien=200000,DonViHocPhi=1,TrangThai=NeedState.Open,TaoLuc=DateTimeOffset.UtcNow});
-        await db.SaveChangesAsync();var service=new TimKiemService(new NhuCauService(db));var workspace=new WorkspaceViewModel {Search=new(){Q=marker}};
+        await db.SaveChangesAsync();profile.MoTa=marker;await TutorTestData.Complete(db,profile,fixture.SubjectId,reviewer,false);
+        var service=new TimKiemService(new NhuCauService(db),db);var workspace=new WorkspaceViewModel {Search=new(){Q=marker}};
         await service.TimKiemAsync(workspace);Assert.Empty(workspace.Cards);
         profile.TrangThaiDuyet=ProfileReviewState.Approved;profile.NguoiDuyetId=reviewer;profile.DuyetLuc=DateTimeOffset.UtcNow;await db.SaveChangesAsync();
         await service.TimKiemAsync(workspace);Assert.Single(workspace.Cards);
@@ -80,10 +85,11 @@ public sealed class WorkspaceServiceTests(WorkspaceDatabase fixture) : IClassFix
     {
         await using var db=fixture.Open();var tutor=await User(db);var reviewer=await User(db);
         var profile=new TutorProfile {Id=Guid.NewGuid(),GiaSuId=tutor,TrinhDo="Cử nhân",ChuyenMon="Toán",KinhNghiem="Giảng dạy",MoTa="Giới thiệu",KhuVuc="Hà Nội",HocPhiCongKhai=200000,DonViHocPhi=1,TaoLuc=DateTimeOffset.UtcNow,TrangThaiDuyet=ProfileReviewState.Approved,NguoiDuyetId=reviewer,DuyetLuc=DateTimeOffset.UtcNow};
-        db.TutorProfiles.Add(profile);await db.SaveChangesAsync();var service=new HoSoGiaSuService(db,new NhuCauService(db));
-        await service.CapNhatAsync(tutor,new(){Version=Convert.ToBase64String(profile.RowVersion),Qualification="Cử nhân",Expertise="Toán THCS",Experience="Kinh nghiệm mới",Introduction="Giới thiệu mới",Region="Hà Nội",Subjects=[fixture.SubjectId],TeachingScope="Lớp 9"});
+        db.TutorProfiles.Add(profile);await db.SaveChangesAsync();await TutorTestData.Complete(db,profile,fixture.SubjectId,reviewer);var service=new HoSoGiaSuService(db);
+        await service.CapNhatAsync(tutor,new(){Version=Convert.ToBase64String(profile.RowVersion),DisplayName="Tên gia sư mới",School="Đại học kiểm thử",Major="Sư phạm Toán",StudyStatus="DaTotNghiep",Qualification="Cử nhân",Expertise="Toán THCS",Experience="Kinh nghiệm mới",Introduction="Giới thiệu mới",Subjects=[fixture.SubjectId],TeachingScope="Lớp 9"});
         db.ChangeTracker.Clear();var updated=await db.TutorProfiles.SingleAsync(x=>x.Id==profile.Id);
-        Assert.Equal(ProfileReviewState.Pending,updated.TrangThaiDuyet);Assert.Null(updated.NguoiDuyetId);Assert.Null(updated.DuyetLuc);
+        Assert.Equal(ProfileReviewState.Approved,updated.TrangThaiDuyet);Assert.Equal(reviewer,updated.NguoiDuyetId);Assert.Equal("Giảng dạy",updated.KinhNghiem);
+        var revision=await db.TutorProfileRevisions.SingleAsync(x=>x.HoSoGiaSuId==profile.Id);Assert.Equal(ProfileReviewState.Pending,revision.TrangThai);Assert.Equal("Kinh nghiệm mới",revision.KinhNghiem);
     }
 
     [Theory]

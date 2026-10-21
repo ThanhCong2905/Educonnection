@@ -12,6 +12,11 @@ public sealed class Subject
 
 public sealed class TutorProfile
 {
+    public string TenHienThi { get; set; } = "";
+    public string? AnhDaiDien { get; set; }
+    public string TruongDaoTao { get; set; } = "";
+    public string ChuyenNganh { get; set; } = "";
+    public string TinhTrangHocTap { get; set; } = "";
     public Guid Id { get; set; }
     public Guid GiaSuId { get; set; }
     public string TrinhDo { get; set; } = "";
