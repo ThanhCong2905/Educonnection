@@ -4,7 +4,6 @@
     <h1 id="page-title">Đăng nhập</h1>
     @if (hasAuthError) { <div asp-validation-summary="ModelOnly" class="subtitle login-error" role="alert"></div> }
     else { <p class="subtitle">Chào mừng bạn quay trở lại với EduConnect</p> }
-    @if (TempData["Success"] is string success) { <div class="notice success" role="status">@success</div> }
     <form asp-action="DangNhap" method="post" data-auth-form>
         <input asp-for="ReturnUrl" type="hidden" />
         <div class="field">

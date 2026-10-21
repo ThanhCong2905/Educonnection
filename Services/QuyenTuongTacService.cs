@@ -27,7 +27,7 @@ public sealed class QuyenTuongTacService(AppDbContext db, IConfiguration configu
         else throw new InvalidOperationException("Kết nối chỉ áp dụng giữa gia sư và học sinh/phụ huynh.");
         var profiles=await db.TutorProfiles.FromSqlInterpolated($"SELECT * FROM dbo.HoSoGiaSu WITH (UPDLOCK,HOLDLOCK) WHERE GiaSuId={tutor}").ToListAsync();
         var profile=profiles.SingleOrDefault();
-        if(profile==null || !await HoSoGiaSuRules.PublicProfiles(db).AnyAsync(x=>x.Id==profile.Id)) throw new InvalidOperationException("Gia sư cần hoàn thiện và được duyệt hồ sơ trước khi liên hệ, kết nối hoặc nhắn tin.");
+        if(profile==null || !await HoSoGiaSuRules.PublicProfiles(db,Bypass).AnyAsync(x=>x.Id==profile.Id)) throw new InvalidOperationException(Bypass?"Gia sư cần hoàn thiện hồ sơ, minh chứng và điều kiện nhận lớp trước khi liên hệ.":"Gia sư cần hoàn thiện và được duyệt hồ sơ trước khi liên hệ, kết nối hoặc nhắn tin.");
         return(tutor,learner);
     }
 

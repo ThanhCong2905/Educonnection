@@ -166,6 +166,25 @@ public sealed class TutorWorkflowTests(WorkspaceDatabase fixture) : IClassFixtur
     }
 
     [Fact]
+    public async Task DevelopmentBypassExposesCompletePendingProfileButStillRequiresContactAcceptance()
+    {
+        await using var db=fixture.Open();var pair=await Pair(db);
+        pair.Profile.TrangThaiDuyet=ProfileReviewState.Pending;pair.Profile.NguoiDuyetId=null;pair.Profile.DuyetLuc=null;await db.SaveChangesAsync();
+        var config=new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?>{{"Workspace:BypassTutorApproval","true"}}).Build();
+        var env=new TestEnvironment();var workspace=new WorkspaceViewModel {Search=new(){Q=pair.Profile.MoTa}};
+        await new TimKiemService(new NhuCauService(db),db,config,env).TimKiemAsync(workspace);
+        Assert.Single(workspace.Cards);Assert.False(workspace.Cards[0].IsTutorApproved);
+        Assert.NotNull(await new HoSoGiaSuService(db,env,config).LayHoSoAsync(pair.Tutor,new(){UserId=pair.Learner},null));
+        var shell=await new WorkspaceService(db,config,env).GetWorkspaceAsync(pair.Tutor,true,false);Assert.True(shell.CanPublish);Assert.True(shell.ApprovalBypassed);
+        var guard=new QuyenTuongTacService(db,config,env);
+        await new LienHeService(db,guard).GuiAsync(pair.Learner,new(){Target=pair.Tutor,Note="Xin liên hệ"});
+        await Assert.ThrowsAsync<InvalidOperationException>(()=>new TinNhanService(db,guard).MoHoiThoaiAsync(pair.Learner,pair.Tutor));
+        Assert.Equal(ProfileReviewState.Pending,(await db.TutorProfiles.AsNoTracking().SingleAsync(x=>x.Id==pair.Profile.Id)).TrangThaiDuyet);
+        env.EnvironmentName="Production";workspace.Search.Page=1;await new TimKiemService(new NhuCauService(db),db,config,env).TimKiemAsync(workspace);Assert.Empty(workspace.Cards);
+        Assert.Null(await new HoSoGiaSuService(db,env,config).LayHoSoAsync(pair.Tutor,new(){UserId=pair.Learner},null));
+    }
+
+    [Fact]
     public async Task TutorCannotCreateTeachingNeedThroughForgedWorkspace()
     {
         await using var db=fixture.Open();var pair=await Pair(db);var service=new NhuCauService(db);

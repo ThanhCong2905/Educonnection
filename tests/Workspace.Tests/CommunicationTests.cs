@@ -64,11 +64,13 @@ public sealed class CommunicationTests(WorkspaceDatabase fixture) : IClassFixtur
         await Assert.ThrowsAsync<InvalidOperationException>(()=>service.GuiAsync(stranger,new(){ConversationId=chat,OperationId=Guid.NewGuid(),Text="Xâm nhập"}));
     }
     [Fact]
-    public async Task ApprovalCannotBeBypassedEvenInDevelopment() {
+    public async Task ApprovalBypassOnlyWorksInDevelopmentAndStillRequiresCompleteProfile() {
         await using var db=fixture.Open();var pair=await Pair(db);
         var profile=await db.TutorProfiles.SingleAsync(x=>x.GiaSuId==pair.Tutor);profile.TrangThaiDuyet=ProfileReviewState.Pending;profile.NguoiDuyetId=null;profile.DuyetLuc=null;await db.SaveChangesAsync();
         await Assert.ThrowsAsync<InvalidOperationException>(()=>new TinNhanService(db,Quyen(db,false)).MoHoiThoaiAsync(pair.Tutor,pair.Learner));
         await Assert.ThrowsAsync<InvalidOperationException>(()=>new KetNoiService(db,Quyen(db,true,"Production")).GuiYeuCauAsync(pair.Learner,new(){Target=pair.Tutor,Note="Thử"}));
+        Assert.NotEqual(Guid.Empty,await new TinNhanService(db,Quyen(db)).MoHoiThoaiAsync(pair.Tutor,pair.Learner));
+        await db.ProfileAttachments.Where(x=>x.HoSoGiaSuId==profile.Id).ExecuteDeleteAsync();
         await Assert.ThrowsAsync<InvalidOperationException>(()=>new TinNhanService(db,Quyen(db)).MoHoiThoaiAsync(pair.Tutor,pair.Learner));
     }
     [Fact]

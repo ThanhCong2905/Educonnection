@@ -8,6 +8,8 @@
     <title>@ViewData["Title"] · EduConnect</title>
     <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
+    <script src="~/js/notifications.js" asp-append-version="true" defer></script>
     <script src="~/js/auth.js" asp-append-version="true" defer></script>
 </head>
 <body class="@(ViewData["MainClass"]?.ToString() == "landing-main" ? "landing-page" : "")">
@@ -28,6 +30,7 @@
         </nav>
     </header>
     <main id="main" class="@ViewData["MainClass"]">@RenderBody()</main>
+    <partial name="_FlashMessages" />
     <footer class="site-footer">
         <p>© @DateTime.Now.Year EduConnect. Nền tảng kết nối gia sư uy tín tại Việt Nam.</p>
         <nav aria-label="Thông tin EduConnect">

@@ -6,8 +6,8 @@ namespace KetNoiGiaSu.Services;
 
 public static class HoSoGiaSuRules
 {
-    public static IQueryable<TutorProfile> PublicProfiles(AppDbContext db) => db.TutorProfiles.AsNoTracking().Where(p =>
-        p.TrangThaiDuyet == ProfileReviewState.Approved && p.TenHienThi != "" && p.AnhDaiDien != null && p.AnhDaiDien != "" &&
+    public static IQueryable<TutorProfile> PublicProfiles(AppDbContext db, bool bypassApproval = false) => db.TutorProfiles.AsNoTracking().Where(p =>
+        (bypassApproval || p.TrangThaiDuyet == ProfileReviewState.Approved) && p.TenHienThi != "" && p.AnhDaiDien != null && p.AnhDaiDien != "" &&
         p.TrinhDo != "" && p.TruongDaoTao != "" && p.ChuyenNganh != "" && p.TinhTrangHocTap != "" &&
         p.ChuyenMon != "" && p.KinhNghiem != "" && p.MoTa != "" &&
         db.Users.Any(u=>u.Id == p.GiaSuId && u.TrangThai == 0) &&

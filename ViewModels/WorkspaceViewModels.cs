@@ -14,7 +14,7 @@ public sealed class WorkspaceViewModel
     public bool IsProfileComplete => IsTutor ? MyProfile != null && HasQualificationFile && HasTutorConditions && !string.IsNullOrWhiteSpace(MyProfile.TruongDaoTao) && !string.IsNullOrWhiteSpace(MyProfile.TenHienThi) && !string.IsNullOrWhiteSpace(MyProfile.AnhDaiDien) : HasRequiredAddress;
     public TutorProfile? MyProfile { get; set; }
     public bool ApprovalBypassed { get; set; }
-    public bool CanPublish => !IsTutor || (IsProfileComplete && MyProfile?.TrangThaiDuyet == ProfileReviewState.Approved);
+    public bool CanPublish => !IsTutor || (IsProfileComplete && (ApprovalBypassed || MyProfile?.TrangThaiDuyet == ProfileReviewState.Approved));
     public string Title { get; set; } = "";
     public List<Subject> Subjects { get; set; } = [];
     public List<NeedCard> Cards { get; set; } = [];

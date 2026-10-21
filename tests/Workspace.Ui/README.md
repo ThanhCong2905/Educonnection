@@ -6,7 +6,7 @@ Chạy từ thư mục gốc dự án:
 
 1. `npm install --prefix tests/Workspace.Ui`
 2. `powershell -NoProfile -ExecutionPolicy Bypass -File tests/Workspace.Ui/database.ps1 -Action Create`
-3. Đọc `tmp/workspace-ui-db.json`, dùng ConnectionString trong đó làm biến môi trường `ConnectionStrings__DefaultConnection`. Build và chạy ứng dụng ở `http://localhost:5198` với môi trường Development.
+3. Đọc `tmp/workspace-ui-db.json`, dùng ConnectionString trong đó làm biến môi trường `ConnectionStrings__DefaultConnection`. Build và chạy ứng dụng ở `http://localhost:5198` với môi trường Development. Đặt `Workspace__BypassTutorApproval=false` khi chạy `tutor-workflow.cjs` để kiểm tra luồng duyệt thật; cấu hình local mặc định hiện tạm bỏ duyệt để test thủ công.
 4. `node tests/Workspace.Ui/tutor-workflow.cjs`
 5. Dừng máy chủ kiểm thử, rồi chạy `powershell -NoProfile -ExecutionPolicy Bypass -File tests/Workspace.Ui/database.ps1 -Action Cleanup`.
 

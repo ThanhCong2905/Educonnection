@@ -7,8 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KetNoiGiaSu.Services;
 
-public sealed class HoSoGiaSuService(AppDbContext db, IWebHostEnvironment? environment = null)
+public sealed class HoSoGiaSuService(AppDbContext db, IWebHostEnvironment? environment = null, IConfiguration? configuration=null)
 {
+    private bool BypassApproval=>environment?.IsDevelopment()==true&&configuration?.GetValue<bool>("Workspace:BypassTutorApproval")==true;
     public async Task<TutorProfileForm> LayDeSuaAsync(WorkspaceViewModel workspace)
     {
         var p=workspace.MyProfile;
@@ -61,6 +62,9 @@ public sealed class HoSoGiaSuService(AppDbContext db, IWebHostEnvironment? envir
         // The first submission is private. Approved profiles stay unchanged while a revision awaits review.
         if(p.TrangThaiDuyet!=ProfileReviewState.Approved) {
             ApplyReviewedFields(p,draft);p.TrangThaiDuyet=ProfileReviewState.Pending;p.NguoiDuyetId=null;p.DuyetLuc=null;p.LyDoTuChoi=null;
+            await db.SaveChangesAsync();
+            await db.TeachingSubjects.Where(x=>x.HoSoGiaSuId==p.Id).ExecuteDeleteAsync();
+            db.TeachingSubjects.AddRange(form.Subjects.Distinct().Select(id=>new TeachingSubject {HoSoGiaSuId=p.Id,MonHocId=id,PhamViDay=form.TeachingScope.Trim()}));
         }
         await db.SaveChangesAsync();await tx.CommitAsync();
     }
@@ -89,7 +93,7 @@ public sealed class HoSoGiaSuService(AppDbContext db, IWebHostEnvironment? envir
     public async Task<ProfileDetailViewModel?> LayHoSoAsync(Guid tutorId,WorkspaceViewModel workspace,Guid? needId)
     {
         var own=workspace.IsTutor&&workspace.UserId==tutorId;
-        var p=await (own?db.TutorProfiles.AsNoTracking():HoSoGiaSuRules.PublicProfiles(db)).SingleOrDefaultAsync(x=>x.GiaSuId==tutorId);
+        var p=await (own?db.TutorProfiles.AsNoTracking():HoSoGiaSuRules.PublicProfiles(db,BypassApproval)).SingleOrDefaultAsync(x=>x.GiaSuId==tutorId);
         if(p==null)return null;
         var model=new ProfileDetailViewModel {Workspace=workspace,Profile=p,Name=p.TenHienThi,SelectedNeedId=null,
             Subjects=await (from t in db.TeachingSubjects join s in db.Subjects on t.MonHocId equals s.Id where t.HoSoGiaSuId==p.Id&&s.DangSuDung select s.TenMon+" · "+t.PhamViDay).ToListAsync(),

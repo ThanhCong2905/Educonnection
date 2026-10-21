@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/workspace.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
+    <script src="~/js/notifications.js" asp-append-version="true" defer></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="~/js/workspace.js" asp-append-version="true" defer></script>
 </head><body data-screen="@action" data-account-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value">
@@ -48,13 +50,11 @@
 <div class="app-shell">
     <header class="workspace-topbar"><span>Học tập cùng <strong>EduConnect</strong></span><div><span class="role-badge">@role</span><a asp-controller="Workspace" asp-action="Section" asp-route-name="notifications" aria-label="Thông báo"><img src="~/images/ui/bell.svg" width="20" height="20" alt="" /></a></div></header>
     <main id="main" class="workspace-main">
-        @if (workspace.ApprovalBypassed) { <div class="alert alert-warning" role="status">Chế độ kiểm thử: tạm bỏ điều kiện duyệt gia sư. Trạng thái xét duyệt hồ sơ không thay đổi.</div> }
-        @if (TempData["Success"] is string message) { <div class="alert alert-success" role="status">@message</div> }
-        @if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
         @RenderBody()
     </main>
     <footer class="workspace-footer"><span>© @DateTime.Now.Year EduConnect · Kết nối tri thức, nâng tầm tương lai.</span><a asp-controller="Home" asp-action="Information" asp-route-section="privacy">Bảo mật</a></footer>
 </div>
+<partial name="_FlashMessages" />
 @await RenderSectionAsync("Scripts", required: false)
 <div class="compare-tray d-none" id="compare-tray" role="region" aria-label="Đối tượng được chọn so sánh"><span id="compare-count">Đã chọn 0/3</span><div class="d-flex gap-2"><button class="btn btn-light btn-sm" type="button" id="clear-comparison">Bỏ chọn</button><button class="btn btn-pink btn-sm" type="button" id="open-comparison" data-bs-toggle="modal" data-bs-target="#comparison-modal">So sánh chi tiết</button></div></div>
 <div class="modal fade" id="comparison-modal" tabindex="-1" aria-labelledby="comparison-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="comparison-title">So sánh nhu cầu</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Đóng"></button></div><div class="modal-body table-responsive" id="comparison-content"></div></div></div></div>

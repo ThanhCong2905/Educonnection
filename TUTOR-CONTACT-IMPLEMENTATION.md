@@ -4,7 +4,7 @@
 
 - Gia sư không đăng nhu cầu dạy nữa. Các URL tạo nhu cầu dạy cũ bị chặn; menu thay bằng **Điều kiện nhận lớp**. Nhu cầu dạy đã lưu vẫn được giữ trong database để không mất dữ liệu lịch sử, nhưng không xuất hiện trong tìm kiếm.
 - Người học tìm hồ sơ chuyên môn đã duyệt, đầy đủ minh chứng và điều kiện nhận lớp. Gia sư tiếp tục tìm nhu cầu học của học sinh/phụ huynh.
-- Gia sư phải hoàn thiện chuyên môn, ảnh, môn dạy, minh chứng, điều kiện nhận lớp và được duyệt trước khi liên hệ, nhắn tin hoặc kết nối. Cấu hình bỏ qua duyệt trước đây không mở được các quyền này.
+- Gia sư phải hoàn thiện chuyên môn, ảnh, môn dạy, minh chứng, điều kiện nhận lớp và được duyệt trước khi liên hệ, nhắn tin hoặc kết nối. Để test local, `Workspace:BypassTutorApproval=true` chỉ trong Development cho phép bỏ kiểm tra trạng thái duyệt; không bỏ kiểm tra hồ sơ đầy đủ hoặc chấp nhận liên hệ, không đổi hồ sơ thành đã duyệt. Production luôn yêu cầu duyệt.
 
 ## Hai phần chỉnh sửa
 
@@ -42,6 +42,8 @@ Database mới chạy lần lượt `01_TaoCoSoDuLieu.sql`, `02_DanhMucMonHoc.sq
 Ảnh đại diện được lưu tại `wwwroot/images/tutors`; tệp minh chứng vẫn ở `.private-uploads`, có kiểm tra quyền khi tải. Hai thư mục cần được lưu bền khi triển khai và không đưa lên Git.
 
 ## Kiểm chứng
+
+Thông báo kết quả thao tác dùng chung `_FlashMessages`, hiển thị gọn góc dưới phải và tự xóa sau 5 giây, có nút đóng ngay. Không có nền che trang hay thay đổi vị trí nội dung. Lỗi xác thực trường vẫn ở biểu mẫu để sửa dữ liệu.
 
 - Build không có lỗi hoặc cảnh báo.
 - 36 kiểm thử SQL/nghiệp vụ: quyền liên hệ, chat/kết nối, phiên bản dữ liệu, điều kiện, lịch trùng, tìm hồ sơ, duyệt/từ chối và giữ bản công khai.

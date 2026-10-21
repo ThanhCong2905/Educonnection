@@ -1,10 +1,8 @@
 @model KetNoiGiaSu.ViewModels.PersonalProfileEditor
-@if (TempData["ProfileError"] is string profileError) { <div class="alert alert-danger" role="alert">@profileError</div> }
 @if(!Model.Workspace.IsTutor){
 <section id="personal-details" class="surface profile-section my-4">
 <h2>Địa chỉ cá nhân</h2><p class="text-muted">Điền sẵn khi tạo nhu cầu mới. Chỉ khu vực chung được công khai.</p>
 @if (!Model.Workspace.IsProfileComplete) { <div class="alert alert-warning">Điền địa chỉ để tạo nhu cầu học. Địa chỉ chi tiết không được công khai.</div> }
-@if (TempData["ProfileError"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
 <form asp-controller="ProfileData" asp-action="Address" method="post" data-workspace-form>
 <div class="row g-3"><div class="col-md-6"><label asp-for="Form.City" class="form-label">Tỉnh / Thành phố *</label><input asp-for="Form.City" class="form-control" required maxlength="100" autocomplete="address-level1" /></div>
 <div class="col-md-6"><label asp-for="Form.District" class="form-label">Quận / Huyện / Khu vực</label><input asp-for="Form.District" class="form-control" maxlength="100" /></div>

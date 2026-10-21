@@ -1,0 +1,13 @@
+@{
+    var notices = new[] { (Key: "Success", Kind: "success"), (Key: "Error", Kind: "error"), (Key: "ProfileError", Kind: "error") }
+        .Select(x => (x.Kind, Message: TempData[x.Key] as string)).Where(x => !string.IsNullOrWhiteSpace(x.Message)).ToList();
+}
+@if(notices.Count>0){
+<aside class="flash-region" aria-label="Thông báo">
+@foreach(var notice in notices){
+    <div class="flash-message flash-@notice.Kind" data-flash role="@(notice.Kind=="error"?"alert":"status")">
+        <span>@notice.Message</span><button type="button" data-flash-close aria-label="Đóng thông báo">×</button>
+    </div>
+}
+</aside>
+}

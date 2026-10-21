@@ -5,8 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KetNoiGiaSu.Services;
 
-public sealed class TimKiemService(NhuCauService nhuCau, AppDbContext db)
+public sealed class TimKiemService(NhuCauService nhuCau, AppDbContext db, IConfiguration? configuration=null, IWebHostEnvironment? environment=null)
 {
+    private bool BypassApproval=>environment?.IsDevelopment()==true&&configuration?.GetValue<bool>("Workspace:BypassTutorApproval")==true;
     public async Task TimKiemAsync(WorkspaceViewModel workspace)
     {
         if(!workspace.IsTutor) {await TimGiaSuAsync(workspace);return;}
@@ -26,7 +27,7 @@ public sealed class TimKiemService(NhuCauService nhuCau, AppDbContext db)
     private async Task TimGiaSuAsync(WorkspaceViewModel workspace)
     {
         var f=workspace.Search;
-        var profiles=HoSoGiaSuRules.PublicProfiles(db);
+        var profiles=HoSoGiaSuRules.PublicProfiles(db,BypassApproval);
         if(!string.IsNullOrWhiteSpace(f.Q)) {var word=f.Q.Trim();profiles=profiles.Where(p=>p.TenHienThi.Contains(word)||p.ChuyenMon.Contains(word)||p.MoTa.Contains(word)||db.TeachingSubjects.Any(t=>t.HoSoGiaSuId==p.Id&&db.Subjects.Any(s=>s.Id==t.MonHocId&&s.TenMon.Contains(word))));}
         if(f.SubjectId.HasValue)profiles=profiles.Where(p=>db.TeachingSubjects.Any(t=>t.HoSoGiaSuId==p.Id&&t.MonHocId==f.SubjectId));
         if(!string.IsNullOrWhiteSpace(f.Grade)) {
@@ -43,7 +44,7 @@ public sealed class TimKiemService(NhuCauService nhuCau, AppDbContext db)
         if(f.MaxFee.HasValue)q=q.Where(x=>x.c.DonViHocPhi==f.FeeUnit&&x.c.HocPhi<=f.MaxFee);
         workspace.Total=await q.CountAsync();f.Page=Math.Clamp(f.Page,1,workspace.PageCount);
         workspace.Cards=await q.OrderByDescending(x=>x.p.DuyetLuc).ThenBy(x=>x.p.Id).Skip((f.Page-1)*9).Take(9).Select(x=>new NeedCard {
-            Id=x.p.Id,OwnerId=x.p.GiaSuId,OwnerName=x.p.TenHienThi,Avatar=x.p.AnhDaiDien,IsTutor=true,IsTutorApproved=true,
+            Id=x.p.Id,OwnerId=x.p.GiaSuId,OwnerName=x.p.TenHienThi,Avatar=x.p.AnhDaiDien,IsTutor=true,IsTutorApproved=x.p.TrangThaiDuyet==ProfileReviewState.Approved,
             State=NeedState.Open,Goal=x.p.MoTa,Region=x.c.KhuVuc,Fee=x.c.HocPhi,FeeUnit=x.c.DonViHocPhi,
             SupportsOnline=x.c.DayTrucTuyen,SupportsInPerson=x.c.DayTrucTiep,Format=x.c.DayTrucTuyen?0:1,
             Qualification=x.p.TrinhDo,Experience=x.p.KinhNghiem,Created=x.p.TaoLuc
